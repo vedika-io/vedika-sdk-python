@@ -68,9 +68,9 @@ class RateLimitError(VedikaAPIError):
     - Upgrade your plan for higher limits
 
     Rate limits:
-    - Free tier: 10 requests/minute
-    - Starter: 60 requests/minute
-    - Professional: 300 requests/minute
+    - Starter: 30 requests/minute
+    - Professional: 60 requests/minute
+    - Business: 120 requests/minute
     - Enterprise: Custom limits
 
     Example:
@@ -95,14 +95,14 @@ class InsufficientCreditsError(VedikaAPIError):
     - Query would exceed available credits
 
     Solution:
-    - Add more credits at https://vedika.io/dashboard.html
-    - Check your credit balance before making requests
-    - Enable auto-recharge to prevent interruptions
+    - Upgrade your plan at https://vedika.io/pricing
+    - Check your wallet balance before making requests
 
-    Credit costs:
-    - Simple queries: ~500 tokens ($0.19)
-    - Standard queries: ~800 tokens ($0.35)
-    - Complex queries: ~1,500 tokens ($0.65)
+    Plans:
+    - Starter: $12/month
+    - Professional: $60/month
+    - Business: $120/month
+    - Enterprise: $240/month
 
     Example:
         >>> try:
