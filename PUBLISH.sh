@@ -23,9 +23,9 @@ The only B2B astrology API with AI-powered chatbot queries.
 Features:
 - AI-powered conversational astrology questions (UNIQUE)
 - 108+ traditional features (birth charts, dashas, yogas, doshas)
-- Multi-agent swarm intelligence (6 specialized AI agents)
-- 22 language support (including 11 Indian languages)
-- 97.2% prediction accuracy
+- Advanced AI intelligence engine
+- 14 Indian language support plus English
+- High citation accuracy from classical texts
 - 99.9% uptime guarantee
 - Real-time streaming support
 - Complete documentation and examples
@@ -48,7 +48,7 @@ echo "   - Public repository"
 echo "   - Do NOT initialize with README (we already have one)"
 echo ""
 echo "2. Or use GitHub CLI (if installed):"
-echo "   gh repo create vedika-intelligence/vedika-sdk-python --public --source=. --description=\"The only B2B astrology API with AI-powered chatbot queries - Python SDK\""
+echo "   gh repo create vedika-io/vedika-sdk-python --public --source=. --description=\"The only B2B astrology API with AI-powered chatbot queries - Python SDK\""
 echo ""
 echo "3. Add remote and push:"
 echo "   git remote add origin https://github.com/YOUR_USERNAME/vedika-sdk-python.git"

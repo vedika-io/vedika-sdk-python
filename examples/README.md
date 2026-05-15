@@ -52,7 +52,7 @@ VEDIKA_API_KEY=vk_test_your_api_key_here
   - Best for: Interactive applications
 
 - **`multi_language.py`** - Multi-language support
-  - Ask questions in 22 languages
+  - Ask questions in 14 Indian languages plus English
   - Get responses in Hindi, Tamil, etc.
   - Best for: Multilingual applications
 
@@ -89,4 +89,4 @@ Sign up for free at https://vedika.io/dashboard.html to get your API key.
 
 - Documentation: https://vedika.io/docs.html
 - Support: support@vedika.io
-- GitHub Issues: https://github.com/vedika-intelligence/vedika-sdk-python/issues
+- GitHub Issues: https://github.com/vedika-io/vedika-sdk-python/issues

@@ -112,7 +112,7 @@ The SDK enforces HTTPS for all API requests. Never modify the base URL to use HT
 # ✅ HTTPS (default and required)
 client = VedikaClient(
     api_key=os.getenv("VEDIKA_API_KEY"),
-    base_url="https://vedika-api-854222120654.us-central1.run.app"
+    base_url="https://api.vedika.io"
 )
 
 # ❌ HTTP (will fail)

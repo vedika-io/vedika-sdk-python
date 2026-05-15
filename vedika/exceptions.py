@@ -97,7 +97,7 @@ class InsufficientCreditsError(VedikaAPIError):
     Solution:
     - Add more credits at https://vedika.io/dashboard.html
     - Check your credit balance before making requests
-    - Enable auto-recharge to prevent interruptions
+    - Add funds at xalen.io/dashboard to continue
 
     Credit costs:
     - Simple queries: ~500 tokens ($0.19)

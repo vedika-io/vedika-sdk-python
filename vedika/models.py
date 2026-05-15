@@ -40,8 +40,8 @@ class QuestionResponse:
     Response from AI chatbot query (UNIQUE to Vedika!).
 
     Attributes:
-        answer: Detailed astrological answer from 6 AI agents
-        confidence: Prediction confidence score (0.0 to 1.0)
+        answer: Detailed astrological answer
+        confidence: Response metadata score
         credits_used: Credits consumed for this query
         processing_time: Time taken to process (seconds)
         language: Response language

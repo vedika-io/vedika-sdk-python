@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release of Vedika Python SDK
 - `VedikaClient` class for interacting with Vedika Astrology API
 - Support for AI-powered conversational astrology queries (UNIQUE feature!)
-- Multi-agent swarm intelligence integration
+- Advanced AI intelligence integration
 
 #### API Methods
 - `ask_question()` - Ask conversational astrology questions
@@ -53,7 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - HTTPS-only communication
 - Environment variable support for API keys
 - Comprehensive error messages
-- 22 language support (including 11 Indian languages)
+- 14 Indian language support plus English
 - Prompt caching for 90% cost savings on repeated queries
 
 #### Documentation
@@ -93,9 +93,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Performance
 - Average response time: 2.14 seconds (simple queries)
-- Complex queries: 28-36 seconds (multi-agent processing)
+- Complex queries: 28-36 seconds (deep analysis)
 - 99.9% uptime with 3-tier ephemeris fallback
-- 97.2% prediction accuracy
+- High citation accuracy from classical texts
 
 ## [Unreleased]
 
@@ -132,6 +132,6 @@ We follow [Semantic Versioning](https://semver.org/):
 
 ---
 
-For the complete version history, see: https://github.com/vedika-intelligence/vedika-sdk-python/releases
+For the complete version history, see: https://github.com/vedika-io/vedika-sdk-python/releases
 
-[1.0.0]: https://github.com/vedika-intelligence/vedika-sdk-python/releases/tag/v1.0.0
+[1.0.0]: https://github.com/vedika-io/vedika-sdk-python/releases/tag/v1.0.0

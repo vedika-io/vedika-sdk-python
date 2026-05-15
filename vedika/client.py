@@ -55,7 +55,7 @@ class VedikaClient:
     def __init__(
         self,
         api_key: Optional[str] = None,
-        base_url: str = "https://vedika-api-854222120654.us-central1.run.app",
+        base_url: str = "https://api.vedika.io",
         timeout: int = 60,
         max_retries: int = 3,
         cache_enabled: bool = True,
