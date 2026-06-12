@@ -288,9 +288,22 @@ class DashaResponse:
             for d in data.get("mahadashas", [])
         ]
 
+        def _periods(key):
+            return [
+                Dasha(
+                    planet=d.get("planet", ""),
+                    start_date=d.get("startDate", ""),
+                    end_date=d.get("endDate", ""),
+                    duration_years=d.get("durationYears", 0.0),
+                    level=key,
+                )
+                for d in data.get(key, [])
+            ]
         return cls(
             mahadashas=mahadashas,
-            current_dasha=data.get("currentDasha")
+            antardashas=_periods("antardashas"),
+            pratyantardashas=_periods("pratyantardashas"),
+            current_dasha=data.get("currentDasha"),
         )
 
 

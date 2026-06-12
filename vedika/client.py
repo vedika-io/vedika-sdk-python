@@ -50,6 +50,12 @@ from .exceptions import (
 )
 
 
+def _offset_from_datetime(dt):
+    """Extract UTC offset ('+05:30' / 'Z') from an ISO datetime, else None."""
+    import re
+    m = re.search(r'([+-]\d{2}:?\d{2}|Z)$', dt or '')
+    return m.group(1) if m else None
+
 def _v2_payload(result):
     """Unwrap a V2 envelope response ({success, data, billing, meta}) to its
     payload. V2 endpoints (Jun 2026 route migration) wrap the body; the legacy
@@ -335,20 +341,30 @@ class VedikaClient:
         """
         result = _v2_payload(self._request("POST", "/v2/astrology/dasha-periods", data=birth_details))
         # Bridge the v2 snake_case period keys to the legacy model shape.
+        # v2 nests antar_dasha[] inside each maha period; the legacy model
+        # exposes flat mahadashas + the antar/pratyantar of the CURRENT maha
+        # (full nesting always available via .raw).
         periods = result.get("maha_dasha") or []
+        def _map(d):
+            return {
+                "planet": d.get("planet", ""),
+                "startDate": d.get("start_date", ""),
+                "endDate": d.get("end_date", ""),
+                "durationYears": d.get("duration_years", 0.0),
+            }
+        cur = result.get("current_dasha") if isinstance(result.get("current_dasha"), dict) else {}
+        cur_maha = cur.get("maha_dasha") or {}
+        cur_full = next((p for p in periods if p.get("planet") == cur_maha.get("planet")), {})
+        antars = cur_full.get("antar_dasha") or []
+        cur_antar = cur.get("antar_dasha") or {}
+        cur_antar_full = next((a for a in antars if a.get("planet") == cur_antar.get("planet")), {})
+        pratyantars = cur_antar_full.get("pratyantar_dasha") or cur_antar_full.get("pratyantar") or []
         bridged = {
             **result,
-            "mahadashas": [
-                {
-                    "planet": d.get("planet", ""),
-                    "startDate": d.get("start_date", ""),
-                    "endDate": d.get("end_date", ""),
-                    "durationYears": d.get("duration_years", 0.0),
-                }
-                for d in periods
-            ],
-            # v2 nests the active period: current_dasha.maha_dasha.planet
-            "currentDasha": ((result.get("current_dasha") or {}).get("maha_dasha") or {}).get("planet")
+            "mahadashas": [_map(d) for d in periods],
+            "antardashas": [_map(a) for a in antars],
+            "pratyantardashas": [_map(p) for p in pratyantars],
+            "currentDasha": cur_maha.get("planet")
                 if isinstance(result.get("current_dasha"), dict) else result.get("current_dasha"),
         }
         obj = DashaResponse.from_dict(bridged)
@@ -1009,7 +1025,11 @@ class VedikaClient:
 
         def card_of_the_day(self) -> TarotCard:
             """Get a single card of the day."""
-            return TarotCard.from_dict(self._c._request("GET", "/v2/tarot/card-of-the-day"))
+            _r = _v2_payload(self._c._request("GET", "/v2/tarot/card-of-the-day"))
+            _o = TarotCard.from_dict(_r)
+            try: _o.raw = _r
+            except Exception: pass
+            return _o
 
         def draw(self, spread: str, question: Optional[str] = None) -> TarotReading:
             """Draw a tarot spread.
@@ -1028,7 +1048,11 @@ class VedikaClient:
 
         def spreads(self) -> SpreadList:
             """List available tarot spreads."""
-            return SpreadList.from_dict(self._c._request("GET", "/v2/tarot/spreads"))
+            _r = _v2_payload(self._c._request("GET", "/v2/tarot/spreads"))
+            _o = SpreadList.from_dict(_r)
+            try: _o.raw = _r
+            except Exception: pass
+            return _o
 
     class _ChineseDomain:
         def __init__(self, client: 'VedikaClient'):
@@ -1040,7 +1064,11 @@ class VedikaClient:
             Args:
                 year: Year to look up (e.g. 1995)
             """
-            return ChineseZodiac.from_dict(self._c._request("GET", f"/v2/chinese/zodiac/{year}"))
+            _r = _v2_payload(self._c._request("GET", f"/v2/chinese/zodiac/{year}"))
+            _o = ChineseZodiac.from_dict(_r)
+            try: _o.raw = _r
+            except Exception: pass
+            return _o
 
         def bazi(self, birth_details: Dict[str, Any]) -> BaZiChart:
             """Get BaZi (Four Pillars of Destiny) chart.
@@ -1087,11 +1115,19 @@ class VedikaClient:
             data: Dict[str, Any] = {}
             if question:
                 data["question"] = question
-            return Hexagram.from_dict(self._c._request("POST", "/v2/iching/cast", data=data))
+            _r = _v2_payload(self._c._request("POST", "/v2/iching/cast", data=data))
+            _o = Hexagram.from_dict(_r)
+            try: _o.raw = _r
+            except Exception: pass
+            return _o
 
         def daily(self) -> Hexagram:
             """Get daily I Ching hexagram."""
-            return Hexagram.from_dict(self._c._request("GET", "/v2/iching/daily"))
+            _r = _v2_payload(self._c._request("GET", "/v2/iching/daily"))
+            _o = Hexagram.from_dict(_r)
+            try: _o.raw = _r
+            except Exception: pass
+            return _o
 
     class _CrystalsDomain:
         def __init__(self, client: 'VedikaClient'):
@@ -1125,7 +1161,11 @@ class VedikaClient:
             Args:
                 birth_details: dict with datetime, latitude, longitude, timezone
             """
-            return BodyGraph.from_dict(self._c._request("POST", "/v2/human-design/chart", data=birth_details))
+            _r = _v2_payload(self._c._request("POST", "/v2/human-design/chart", data=birth_details))
+            _o = BodyGraph.from_dict(_r)
+            try: _o.raw = _r
+            except Exception: pass
+            return _o
 
         def type(self, birth_details: Dict[str, Any]) -> HDType:
             """Get Human Design type summary.
@@ -1133,7 +1173,11 @@ class VedikaClient:
             Args:
                 birth_details: dict with datetime, latitude, longitude, timezone
             """
-            return HDType.from_dict(self._c._request("POST", "/v2/human-design/type", data=birth_details))
+            _r = _v2_payload(self._c._request("POST", "/v2/human-design/type", data=birth_details))
+            _o = HDType.from_dict(_r)
+            try: _o.raw = _r
+            except Exception: pass
+            return _o
 
     class _MatrimonyDomain:
         def __init__(self, client: 'VedikaClient'):
@@ -1173,7 +1217,11 @@ class VedikaClient:
             Args:
                 birth_details: dict with datetime, latitude, longitude, timezone
             """
-            return MantraResult.from_dict(self._c._request("POST", "/v2/spiritual/mantra", data=birth_details))
+            _r = _v2_payload(self._c._request("POST", "/v2/spiritual/mantra", data=birth_details))
+            _o = MantraResult.from_dict(_r)
+            try: _o.raw = _r
+            except Exception: pass
+            return _o
 
         def deity(self, birth_details: Dict[str, Any]) -> DeityResult:
             """Get recommended deity for worship.
@@ -1181,7 +1229,11 @@ class VedikaClient:
             Args:
                 birth_details: dict with datetime, latitude, longitude, timezone
             """
-            return DeityResult.from_dict(self._c._request("POST", "/v2/spiritual/deity", data=birth_details))
+            _r = _v2_payload(self._c._request("POST", "/v2/spiritual/deity", data=birth_details))
+            _o = DeityResult.from_dict(_r)
+            try: _o.raw = _r
+            except Exception: pass
+            return _o
 
         def past_life(self, birth_details: Dict[str, Any]) -> PastLifeResult:
             """Get past life karmic indicators.
@@ -1189,7 +1241,11 @@ class VedikaClient:
             Args:
                 birth_details: dict with datetime, latitude, longitude, timezone
             """
-            return PastLifeResult.from_dict(self._c._request("POST", "/v2/spiritual/past-life", data=birth_details))
+            _r = _v2_payload(self._c._request("POST", "/v2/spiritual/past-life", data=birth_details))
+            _o = PastLifeResult.from_dict(_r)
+            try: _o.raw = _r
+            except Exception: pass
+            return _o
 
     class _DailyDomain:
         def __init__(self, client: 'VedikaClient'):
@@ -1197,7 +1253,11 @@ class VedikaClient:
 
         def bundle(self) -> DailyBundle:
             """Get comprehensive daily bundle (horoscope + panchang + tarot + mantra)."""
-            return DailyBundle.from_dict(self._c._request("GET", "/v2/daily/bundle"))
+            _r = _v2_payload(self._c._request("GET", "/v2/daily/bundle"))
+            _o = DailyBundle.from_dict(_r)
+            try: _o.raw = _r
+            except Exception: pass
+            return _o
 
         def horoscope(self, sign: str) -> Dict[str, Any]:
             """Get daily horoscope for a zodiac sign.
@@ -1252,6 +1312,7 @@ class VedikaClient:
                 "timeOfBirth": str(birth_details.get("datetime", ""))[11:16],
                 "latitude": birth_details.get("latitude"),
                 "longitude": birth_details.get("longitude"),
+                "timezone": birth_details.get("timezone") or _offset_from_datetime(str(birth_details.get("datetime", ""))),
             }))
             _obj = HealthResult.from_dict(_r)
             _obj.raw = _r
@@ -1272,6 +1333,7 @@ class VedikaClient:
                 "timeOfBirth": str(birth_details.get("datetime", ""))[11:16],
                 "latitude": birth_details.get("latitude"),
                 "longitude": birth_details.get("longitude"),
+                "timezone": birth_details.get("timezone") or _offset_from_datetime(str(birth_details.get("datetime", ""))),
             }))
             _obj = CareerResult.from_dict(_r)
             _obj.raw = _r
