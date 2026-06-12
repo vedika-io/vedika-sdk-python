@@ -577,7 +577,9 @@ class VedikaClient:
             chart: navamsa, dashamsa, saptamsa, dwadashamsa, etc.
             birth_details: dict with datetime, latitude, longitude, timezone
         """
-        return self._request("POST", f"/v2/astrology/{chart}", data=birth_details)
+        # D2 'hora' is /v2/astrology/hora-chart; /hora is muhurta planetary-hours.
+        _path = "hora-chart" if chart in ("hora", "D2") else chart
+        return self._request("POST", f"/v2/astrology/{_path}", data=birth_details)
 
     def get_prediction(
         self,
@@ -668,7 +670,8 @@ class VedikaClient:
             system: vedic or western
         """
         base = "/v2/western" if system == "western" else "/v2/astrology"
-        path = f"{base}/horoscope/{sign}" if period == "daily" else f"{base}/horoscope/{sign}/{period}"
+        # Western only exposes base /horoscope/{sign}; Vedic supports /{period}.
+        path = f"{base}/horoscope/{sign}" if (period == "daily" or system == "western") else f"{base}/horoscope/{sign}/{period}"
         return self._request("GET", path)
 
     # ═══════════════════════════════════════════
@@ -1064,7 +1067,7 @@ class VedikaClient:
             Args:
                 year: Year to look up (e.g. 1995)
             """
-            _r = _v2_payload(self._c._request("GET", f"/v2/chinese/zodiac/{year}"))
+            _r = _v2_payload(self._c._request("POST", "/v2/chinese/zodiac-animal", data={"year": year}))
             _o = ChineseZodiac.from_dict(_r)
             try: _o.raw = _r
             except Exception: pass
@@ -1139,7 +1142,7 @@ class VedikaClient:
             Args:
                 sign: Zodiac sign (e.g. "aries", "taurus")
             """
-            result = self._c._request("GET", f"/v2/crystals/zodiac/{sign}")
+            result = self._c._request("GET", f"/v2/crystals/by-zodiac/{sign}")
             if isinstance(result, list):
                 return [Crystal.from_dict(c) for c in result]
             return [Crystal.from_dict(c) for c in result.get("crystals", result.get("data", []))]
