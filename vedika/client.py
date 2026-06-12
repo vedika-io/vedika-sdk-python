@@ -50,6 +50,14 @@ from .exceptions import (
 )
 
 
+def _v2_payload(result):
+    """Unwrap a V2 envelope response ({success, data, billing, meta}) to its
+    payload. V2 endpoints (Jun 2026 route migration) wrap the body; the legacy
+    typed models predate that. Callers attach the full payload to the returned
+    model as `.raw` so no field is ever lost to a model-shape mismatch."""
+    return result.get("data", result) if isinstance(result, dict) else result
+
+
 class VedikaClient:
     """
     Main client for the Vedika Astrology API.
@@ -325,8 +333,27 @@ class VedikaClient:
         Returns:
             DashaResponse with mahadashas, antardashas, and pratyantardashas
         """
-        result = self._request("POST", "/api/vedika/dasha-periods", data={"birthDetails": birth_details})
-        return DashaResponse.from_dict(result)
+        result = _v2_payload(self._request("POST", "/v2/astrology/dasha-periods", data=birth_details))
+        # Bridge the v2 snake_case period keys to the legacy model shape.
+        periods = result.get("maha_dasha") or []
+        bridged = {
+            **result,
+            "mahadashas": [
+                {
+                    "planet": d.get("planet", ""),
+                    "startDate": d.get("start_date", ""),
+                    "endDate": d.get("end_date", ""),
+                    "durationYears": d.get("duration_years", 0.0),
+                }
+                for d in periods
+            ],
+            # v2 nests the active period: current_dasha.maha_dasha.planet
+            "currentDasha": ((result.get("current_dasha") or {}).get("maha_dasha") or {}).get("planet")
+                if isinstance(result.get("current_dasha"), dict) else result.get("current_dasha"),
+        }
+        obj = DashaResponse.from_dict(bridged)
+        obj.raw = result
+        return obj
 
     def check_compatibility(
         self,
@@ -364,8 +391,10 @@ class VedikaClient:
         Returns:
             YogaResponse with detected yogas and descriptions
         """
-        result = self._request("POST", "/api/vedika/yoga-detection", data={"birthDetails": birth_details})
-        return YogaResponse.from_dict(result)
+        result = _v2_payload(self._request("POST", "/v2/astrology/jaimini/rajayogas", data=birth_details))
+        obj = YogaResponse.from_dict(result)
+        obj.raw = result
+        return obj
 
     def analyze_doshas(
         self,
@@ -380,8 +409,10 @@ class VedikaClient:
         Returns:
             DoshaResponse with dosha analysis and remedies
         """
-        result = self._request("POST", "/api/vedika/dosha-analysis", data={"birthDetails": birth_details})
-        return DoshaResponse.from_dict(result)
+        result = _v2_payload(self._request("POST", "/v2/astrology/all-doshas", data=birth_details))
+        obj = DoshaResponse.from_dict(result)
+        obj.raw = result
+        return obj
 
     def get_muhurtha(
         self,
@@ -402,12 +433,15 @@ class VedikaClient:
         """
         data = {
             "date": date,
-            "location": location,
+            "latitude": location.get("latitude") if isinstance(location, dict) else None,
+            "longitude": location.get("longitude") if isinstance(location, dict) else None,
             "eventType": event_type
         }
 
-        result = self._request("POST", "/api/vedika/muhurtha", data=data)
-        return MuhurthaResponse.from_dict(result)
+        result = _v2_payload(self._request("POST", "/v2/astrology/muhurta", data=data))
+        obj = MuhurthaResponse.from_dict(result)
+        obj.raw = result
+        return obj
 
     def get_numerology(
         self,
@@ -429,8 +463,10 @@ class VedikaClient:
             "birthDate": birth_date
         }
 
-        result = self._request("POST", "/api/vedika/numerology", data=data)
-        return NumerologyResponse.from_dict(result)
+        result = _v2_payload(self._request("POST", "/v2/astrology/numerology/complete", data=data))
+        obj = NumerologyResponse.from_dict(result)
+        obj.raw = result
+        return obj
 
     # ═══════════════════════════════════════════
     # V2 Vedic Computation Endpoints
@@ -982,10 +1018,13 @@ class VedikaClient:
                 spread: Spread type (e.g. "celtic-cross", "three-card", "single")
                 question: Optional question for the reading
             """
-            data: Dict[str, Any] = {"spread": spread}
+            data: Dict[str, Any] = {}
             if question:
                 data["question"] = question
-            return TarotReading.from_dict(self._c._request("POST", "/v2/tarot/draw", data=data))
+            _r = _v2_payload(self._c._request("POST", f"/v2/tarot/draw/{spread}", data=data))
+            _obj = TarotReading.from_dict(_r)
+            _obj.raw = _r
+            return _obj
 
         def spreads(self) -> SpreadList:
             """List available tarot spreads."""
@@ -1009,7 +1048,10 @@ class VedikaClient:
             Args:
                 birth_details: dict with datetime, latitude, longitude, timezone
             """
-            return BaZiChart.from_dict(self._c._request("POST", "/v2/chinese/bazi", data=birth_details))
+            _r = _v2_payload(self._c._request("POST", "/v2/chinese/bazi/chart", data=birth_details))
+            _obj = BaZiChart.from_dict(_r)
+            _obj.raw = _r
+            return _obj
 
         @property
         def feng_shui(self) -> 'VedikaClient._FengShuiDomain':
@@ -1026,10 +1068,11 @@ class VedikaClient:
                 birth_year: Year of birth
                 gender: "male" or "female"
             """
-            return KuaResult.from_dict(
-                self._c._request("GET", "/v2/chinese/feng-shui/kua",
-                                 params={"birthYear": birth_year, "gender": gender})
-            )
+            _r = _v2_payload(self._c._request("POST", "/v2/chinese/feng-shui/kua-number",
+                                              data={"birthYear": birth_year, "gender": gender}))
+            _obj = KuaResult.from_dict(_r)
+            _obj.raw = _r
+            return _obj
 
     class _IChingDomain:
         def __init__(self, client: 'VedikaClient'):
@@ -1204,7 +1247,15 @@ class VedikaClient:
             Args:
                 birth_details: dict with datetime, latitude, longitude, timezone
             """
-            return HealthResult.from_dict(self._c._request("POST", "/v2/astrology/health", data=birth_details))
+            _r = _v2_payload(self._c._request("POST", "/v2/health/vulnerabilities", data={
+                "dateOfBirth": str(birth_details.get("datetime", ""))[:10],
+                "timeOfBirth": str(birth_details.get("datetime", ""))[11:16],
+                "latitude": birth_details.get("latitude"),
+                "longitude": birth_details.get("longitude"),
+            }))
+            _obj = HealthResult.from_dict(_r)
+            _obj.raw = _r
+            return _obj
 
     class _CareerDomain:
         def __init__(self, client: 'VedikaClient'):
@@ -1216,7 +1267,15 @@ class VedikaClient:
             Args:
                 birth_details: dict with datetime, latitude, longitude, timezone
             """
-            return CareerResult.from_dict(self._c._request("POST", "/v2/astrology/career", data=birth_details))
+            _r = _v2_payload(self._c._request("POST", "/v2/career/suitable", data={
+                "dateOfBirth": str(birth_details.get("datetime", ""))[:10],
+                "timeOfBirth": str(birth_details.get("datetime", ""))[11:16],
+                "latitude": birth_details.get("latitude"),
+                "longitude": birth_details.get("longitude"),
+            }))
+            _obj = CareerResult.from_dict(_r)
+            _obj.raw = _r
+            return _obj
 
     def __repr__(self) -> str:
         return f"VedikaClient(api_key={'***' + self.api_key[-4:] if self.api_key else 'None'})"
