@@ -11,12 +11,12 @@ pip install vedika-sdk
 
 2. Set your API key:
 ```bash
-export VEDIKA_API_KEY="vk_test_your_api_key_here"
+export VEDIKA_API_KEY="vk_live_..."
 ```
 
 Or create a `.env` file:
 ```
-VEDIKA_API_KEY=vk_test_your_api_key_here
+VEDIKA_API_KEY=vk_live_...
 ```
 
 ## Examples
@@ -51,22 +51,12 @@ VEDIKA_API_KEY=vk_test_your_api_key_here
   - Better user experience
   - Best for: Interactive applications
 
-- **`multi_language.py`** - Multi-language support
-  - Ask questions in 22 languages
-  - Get responses in Hindi, Tamil, etc.
-  - Best for: Multilingual applications
+### Vastu Examples
 
-### Web Framework Examples
-
-- **`flask_app.py`** - Flask web application
-  - Complete web app with REST API
-  - Production-ready example
-  - Best for: Web applications
-
-- **`django_integration.py`** - Django integration
-  - Django view and model integration
-  - Async support
-  - Best for: Django projects
+- **`vastu_audit.py`** - Vastu compliance audit (93 operations)
+  - Mandala projection, entrance classification, room placement, scoring
+  - Vastu takes a BUILDING (plot polygon, rooms, compass zone), never a birth chart
+  - Best for: Architectural / construction Vastu review
 
 ## Running Examples
 
@@ -77,16 +67,16 @@ python examples/basic_chatbot.py
 # Birth chart analysis
 python examples/birth_chart_analysis.py
 
-# Flask web app
-python examples/flask_app.py
+# Vastu compliance audit
+python examples/vastu_audit.py
 ```
 
 ## Get Your API Key
 
-Sign up for free at https://vedika.io/dashboard.html to get your API key.
+Create an account at https://vedika.io/dashboard.html to get your API key.
 
 ## Need Help?
 
 - Documentation: https://vedika.io/docs.html
 - Support: support@vedika.io
-- GitHub Issues: https://github.com/vedika-intelligence/vedika-sdk-python/issues
+- GitHub Issues: https://github.com/vedika-io/vedika-sdk-python/issues

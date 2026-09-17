@@ -19,7 +19,7 @@ from .models import (
     StructuredResponseSection,
     VoiceResponse,
     VoiceBilling,
-    # Project Dominion models
+    # Additional calculation models
     TarotCard,
     TarotReading,
     SpreadInfo,
@@ -40,6 +40,7 @@ from .models import (
     AllDashaResult,
     HealthResult,
     CareerResult,
+    normalize_western_relationship,
 )
 from .exceptions import (
     VedikaAPIError,
@@ -50,7 +51,7 @@ from .exceptions import (
     ValidationError
 )
 
-__version__ = "3.0.0"
+__version__ = "3.0.9"
 __author__ = "Vedika Intelligence"
 __email__ = "support@vedika.io"
 __url__ = "https://vedika.io"
@@ -71,7 +72,7 @@ __all__ = [
     "StructuredResponseSection",
     "VoiceResponse",
     "VoiceBilling",
-    # Project Dominion models
+    # Additional calculation models
     "TarotCard",
     "TarotReading",
     "SpreadInfo",
@@ -92,6 +93,7 @@ __all__ = [
     "AllDashaResult",
     "HealthResult",
     "CareerResult",
+    "normalize_western_relationship",
     # Exceptions
     "VedikaAPIError",
     "AuthenticationError",

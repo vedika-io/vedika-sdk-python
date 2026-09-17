@@ -7,7 +7,6 @@ for better user experience.
 """
 
 import os
-import sys
 from vedika import VedikaClient
 from vedika.exceptions import VedikaAPIError
 

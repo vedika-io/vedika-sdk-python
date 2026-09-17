@@ -40,7 +40,7 @@ class AuthenticationError(VedikaAPIError):
 
     Solution:
     - Get a valid API key from https://vedika.io/dashboard.html
-    - Check that your key starts with vk_test_ or vk_live_
+    - Check that your key starts with vk_live_ (or vk_ent_ for enterprise keys)
     - Ensure you haven't accidentally exposed your key
 
     Example:
@@ -120,7 +120,7 @@ class SubscriptionExpiredError(VedikaAPIError):
     Subscription expired — the billing period has ended.
 
     Both ``SUBSCRIPTION_EXPIRED`` and plain ``INSUFFICIENT_BALANCE`` return
-    HTTP 402 on the Vedika API. SDK-2 (v2.3.1, Apr 21, 2026) branches on the
+    HTTP 402 on the Vedika API. The SDK branches on the
     server's ``code`` field so callers can distinguish:
 
     - ``SubscriptionExpiredError``: direct user to renew the subscription
@@ -203,7 +203,7 @@ class TimeoutError(VedikaAPIError):
     Example:
         >>> # Increase timeout for complex queries
         >>> client = VedikaClient(
-        ...     api_key="vk_test_...",
+        ...     api_key="vk_live_...",
         ...     timeout=120  # 2 minutes
         ... )
         >>>

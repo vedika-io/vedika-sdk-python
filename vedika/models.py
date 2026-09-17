@@ -5,7 +5,6 @@ Response models for the Vedika Astrology API.
 
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, field
-from datetime import datetime
 
 
 @dataclass
@@ -96,15 +95,13 @@ class Citation:
     """
     A single citation referencing a classical astrological source.
 
-    SDK-1 (v2.3.1, Apr 21, 2026): Added to model forthcoming public-surface
-    citation field. All fields are optional; only populated when the
-    server-side citation gate is enabled (enterprise tier).
+    All fields are optional and populated only when returned by the API.
 
     Attributes:
         id: Short ID of the cited passage
         topic: Classical topic/rule reference (e.g. "Marriage — 7th house lord")
         source: Source text (e.g. "BPHS", "Saravali", "Phaladeepika")
-        reference: Chapter and verse reference (e.g. "BPHS 7.1-7.5")
+        reference: Chapter and verse label supplied by the API
         text: The cited passage text, if provided
     """
     id: Optional[str] = None
@@ -128,17 +125,16 @@ class Citation:
 @dataclass
 class QuestionResponse:
     """
-    Response from AI chatbot query (UNIQUE to Vedika!).
+    Response from an AI query, with the original envelope retained in raw.
 
     Attributes:
-        answer: Detailed astrological answer from 6 AI agents
-        confidence: Prediction confidence score (0.0 to 1.0)
-        credits_used: Credits consumed for this query
-        processing_time: Time taken to process (seconds)
+        answer: The returned answer text
+        confidence: Legacy confidence field; zero when not returned
+        credits_used: Legacy credit count; zero when not returned, not a USD charge
+        processing_time: Reported duration in seconds; zero when not returned
         language: Response language
         sources: Astrological factors considered
-        citations: Classical-source citations (SDK-1 v2.3.1) — empty/None
-            on non-enterprise tiers
+        citations: Classical-source citations when returned
         structured_response: Parsed sections when response_format='json'
     """
     answer: str
@@ -149,15 +145,34 @@ class QuestionResponse:
     sources: List[str] = field(default_factory=list)
     citations: List[Citation] = field(default_factory=list)
     structured_response: Optional[StructuredResponse] = None
+    # the live server (verified against openapi.json
+    # /api/v1/astrology/query) returns `response` (not `answer`), nests
+    # engine/cost/wallet info under `metadata` (not top-level `confidence` /
+    # `creditsUsed` / `processingTime`), and returns `conversationId` — a field
+    # this model never exposed at all. `conversation_id` and `raw` are added
+    # (additive) so a caller who was reading the README's `response.birth_details`
+    # or `response.conversation_id` has a real, populated field to switch to.
+    conversation_id: Optional[str] = None
+    raw: Dict[str, Any] = field(default_factory=dict)
+    # Present when the answer came from a Vastu report (`ask_vastu_report`):
+    # row ids, cited rows, and whether the report was reused from the
+    # conversation. The report is caller-supplied and never verified.
+    vastu_context: Optional[Dict[str, Any]] = None
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'QuestionResponse':
-        """Create from API response dictionary."""
+        """Create from API response dictionary.
+
+        Accepts BOTH the legacy shape (`answer`/`confidence`/`creditsUsed`/
+        `processingTime`, top-level) and the live v2 shape (`response`/
+        `metadata.cost`/`metadata.processing_time_ms`/`conversationId`) so
+        neither an older fixture nor the current server breaks this model.
+        """
         structured = None
         if data.get("structuredResponse"):
             structured = StructuredResponse.from_dict(data["structuredResponse"])
 
-        # SDK-1 (v2.3.1, Apr 21, 2026): Parse optional citations array.
+        # Parse optional citations array.
         # Tolerant to both missing key and null/non-list values.
         raw_citations = data.get("citations") or []
         citations = [
@@ -165,15 +180,24 @@ class QuestionResponse:
             for c in raw_citations
         ] if isinstance(raw_citations, list) else []
 
+        metadata = data.get("metadata") if isinstance(data.get("metadata"), dict) else {}
+        processing_time = data.get("processingTime")
+        if processing_time is None:
+            ms = metadata.get("processing_time_ms")
+            processing_time = (ms / 1000.0) if isinstance(ms, (int, float)) else 0.0
+
         return cls(
-            answer=data.get("answer", ""),
+            answer=data.get("answer", data.get("response", "")),
             confidence=data.get("confidence", 0.0),
             credits_used=data.get("creditsUsed", 0),
-            processing_time=data.get("processingTime", 0.0),
-            language=data.get("language", "en"),
+            processing_time=processing_time,
+            language=data.get("language", metadata.get("language", "en")),
             sources=data.get("sources", []),
             citations=citations,
-            structured_response=structured
+            structured_response=structured,
+            conversation_id=data.get("conversationId") or data.get("conversation_id"),
+            raw=data,
+            vastu_context=data.get("vastuContext") if isinstance(data.get("vastuContext"), dict) else None,
         )
 
 
@@ -567,7 +591,7 @@ class VoiceResponse:
     """
     Voice query result envelope.
 
-    SDK-3 (v2.3.1, Apr 21, 2026): Types the response from ``/api/v1/voice``.
+    Types the response from ``/api/v1/voice``.
 
     The server returns binary ``audio/mpeg`` with metadata in the
     ``X-Vedika-Voice-Meta`` base64-JSON header. When TTS fails, it falls back
@@ -641,7 +665,7 @@ class VoiceResponse:
 
 
 # ═══════════════════════════════════════════
-# Project Dominion — New Domain Models
+# Extended Domain Models
 # ═══════════════════════════════════════════
 
 
@@ -915,7 +939,13 @@ class HDType:
 
 @dataclass
 class MatchResult:
-    """Matrimony unified match result."""
+    """Matrimony unified match result.
+
+    ``raw`` holds the full original payload so no engine-specific field is ever
+    lost to the typed-model shape — important across the TS->Rust transition,
+    where the matchmaking TOTAL may differ by engine (value divergence) while
+    ``kootas`` / ``dosha_analysis`` stay passthrough dicts that parse from either.
+    """
     total_score: int = 0
     max_score: int = 36
     percentage: float = 0.0
@@ -923,6 +953,7 @@ class MatchResult:
     kootas: List[Dict[str, Any]] = field(default_factory=list)
     dosha_analysis: Dict[str, Any] = field(default_factory=dict)
     recommendation: str = ""
+    raw: Optional[Dict[str, Any]] = None
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'MatchResult':
@@ -934,6 +965,7 @@ class MatchResult:
             kootas=data.get("kootas", []),
             dosha_analysis=data.get("doshaAnalysis", {}),
             recommendation=data.get("recommendation", ""),
+            raw=data if isinstance(data, dict) else None,
         )
 
 
@@ -948,6 +980,7 @@ class DoshaMatchResult:
     severity: Optional[str] = None
     remedies: List[str] = field(default_factory=list)
     explanation: str = ""
+    raw: Optional[Dict[str, Any]] = None
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'DoshaMatchResult':
@@ -960,6 +993,7 @@ class DoshaMatchResult:
             severity=data.get("severity"),
             remedies=data.get("remedies", []),
             explanation=data.get("explanation", ""),
+            raw=data if isinstance(data, dict) else None,
         )
 
 
@@ -1062,12 +1096,15 @@ class DailyBundle:
 
 @dataclass
 class AllDashaResult:
-    """All dasha systems current periods."""
+    """All dasha systems current periods. Every system block beyond
+    ``vimshottari`` is optional, so a response that omits a system (engine-
+    specific across the TS->Rust transition) parses cleanly."""
     vimshottari: Dict[str, Any] = field(default_factory=dict)
     ashtottari: Optional[Dict[str, Any]] = None
     chara: Optional[Dict[str, Any]] = None
     yogini: Optional[Dict[str, Any]] = None
     recommended: str = ""
+    raw: Optional[Dict[str, Any]] = None
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'AllDashaResult':
@@ -1077,6 +1114,7 @@ class AllDashaResult:
             chara=data.get("chara"),
             yogini=data.get("yogini"),
             recommended=data.get("recommended", ""),
+            raw=data if isinstance(data, dict) else None,
         )
 
 
@@ -1120,3 +1158,48 @@ class CareerResult:
             auspicious_periods=data.get("auspiciousPeriods", []),
             guidance=data.get("guidance", ""),
         )
+
+
+# ═══════════════════════════════════════════
+# TS->Rust Transition-Tolerant Helpers (SDK 3.0.6)
+# ═══════════════════════════════════════════
+#
+# The TS->Rust cutover aligns Rust v2 responses to the live TS contract, so most
+# families parse unchanged from either engine (the ``.get(default)`` parsing in
+# the models above is already shape-tolerant). A few families have a KNOWN
+# transition divergence between supported server versions:
+#   - western synastry/composite: the Rust engine may OMIT the ``interpretation``,
+#     ``orbQuality`` / ``orb_quality`` and ``signifies`` prose blocks while the
+#     computed geometry (planets, aspects, orbs) stays parity-exact.
+#   - matchmaking scoring: total may differ by engine (value, not shape).
+# Western relationship results are returned as raw dicts (untyped), which is
+# already tolerant; this helper additionally GUARANTEES the divergent keys exist
+# (defaulted) so downstream code that reads ``["interpretation"]`` never raises a
+# KeyError regardless of which engine produced the response. It invents no data.
+
+
+def normalize_western_relationship(raw: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """Return a western synastry/composite dict with the transition-divergent
+    prose keys always present (defaulted to "" / []), regardless of engine.
+
+    Pure shape-tolerance — no data is fabricated, the original payload is
+    preserved and only missing keys are backfilled with empty values. Per-aspect
+    ``orb_quality``/``orbQuality`` are normalised to a single ``orb_quality`` key
+    while keeping the original keys intact.
+    """
+    r: Dict[str, Any] = dict(raw) if isinstance(raw, dict) else {}
+    aspects = r.get("aspects")
+    if isinstance(aspects, list):
+        norm_aspects = []
+        for a in aspects:
+            if isinstance(a, dict):
+                a = dict(a)
+                a.setdefault("orb_quality", a.get("orbQuality", ""))
+                a.setdefault("signifies", "")
+                a.setdefault("interpretation", "")
+            norm_aspects.append(a)
+        r["aspects"] = norm_aspects
+    else:
+        r.setdefault("aspects", [])
+    r.setdefault("interpretation", "")
+    return r

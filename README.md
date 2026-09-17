@@ -1,5 +1,7 @@
 # Vedika Python SDK
 
+Requires Python 3.10 or later, Requests 2.33.0 or later within 2.x, and urllib3 2.7.0 or later within 2.x. Upgrade Python 3.8 and 3.9 before installing this release. These dependency floors include the current credential, redirect, and decompression security fixes.
+
 Official Python SDK for the Vedika Astrology API - The **only B2B astrology API with AI-powered chatbot queries**.
 
 [![PyPI version](https://badge.fury.io/py/vedika-sdk.svg)](https://badge.fury.io/py/vedika-sdk)
@@ -10,14 +12,11 @@ Official Python SDK for the Vedika Astrology API - The **only B2B astrology API 
 
 Vedika is the **ONLY B2B astrology API** that offers:
 - ✅ **AI-Powered Chatbot Queries** (conversational astrology questions)
-- ✅ **Advanced Multi-Model AI** (intelligent query routing)
-- ✅ **Voice AI** (v33: 3-tier voice interface with 22-language multilingual support)
-- ✅ **Fast & Standard Speed Modes** (1.5-3s fast queries vs 12-18s comprehensive)
+- ✅ **Voice AI** (spoken answers in Indian languages and English; see `/api/v1/voice/pricing` for the current tiers and their languages)
+- ✅ **Fast, Standard & Eco Delivery Tiers** (1.5-3s fast vs 12-18s comprehensive; eco is the lower-cost engine)
 - ✅ **Multi-Turn Conversations** (maintain context via conversationId)
-- ✅ **108+ Traditional Features** (birth charts, dashas, yogas, doshas, compatibility)
-- ✅ **97.2% Prediction Accuracy** (vs 51% industry average)
-- ✅ **99.9% Uptime** (3-tier ephemeris fallback)
-- ✅ **22 Language Support** (including 11 Indian languages)
+- ✅ **Traditional Vedic Coverage** (birth charts, dashas, yogas, doshas, compatibility)
+- ✅ **Multi-Language Answers** (14 Indian languages plus English, and major world languages)
 
 **In summary:** All the features of traditional astrology APIs, **PLUS** conversational AI capabilities no other provider has.
 
@@ -35,7 +34,7 @@ pip install vedika-sdk
 from vedika import VedikaClient
 
 # Initialize client
-client = VedikaClient(api_key="vk_test_your_api_key_here")
+client = VedikaClient(api_key="vk_live_...")
 
 # Ask a conversational astrology question (UNIQUE to Vedika!)
 response = client.ask_question(
@@ -46,19 +45,21 @@ response = client.ask_question(
         "longitude": 77.2090,
         "timezone": "+05:30"
     },
-    language="en",  # Supports 22 languages!
-    speed="standard"  # 'fast' (1.5-3s) or 'standard' (12-18s, default)
+    language="en",  # 29 languages; see the language list below
+    speed="standard"  # 'fast' (1.5-3s), 'standard' (12-18s, default), or 'eco' (lower cost)
 )
 
 print(response.answer)
-print(f"Confidence: {response.confidence}")
-print(f"Credits used: {response.credits_used}")
 print(f"Conversation ID: {response.conversation_id}")  # Use for multi-turn
+# confidence/credits_used are legacy fields the live engine may not populate;
+# response.raw has the full server payload (metadata.cost, metadata.wallet, ...)
+print(f"Full metadata: {response.raw.get('metadata')}")
 
-# Continue conversation
+# Continue conversation — re-send the SAME birth_details you used originally;
+# the server does not echo them back on the response.
 follow_up = client.ask_question(
     question="Tell me about my marriage prospects",
-    birth_details=response.birth_details,
+    birth_details=birth_info,
     conversation_id=response.conversation_id  # Maintains context
 )
 ```
@@ -67,11 +68,10 @@ follow_up = client.ask_question(
 
 ```
 Answer: Based on your birth chart analysis, this year shows strong career potential...
-[Detailed astrological insights from 6 AI agents]
+[Detailed astrological insights across the relevant chart factors]
 
-Confidence: 0.972
-Credits used: 450
-Processing time: 28.7 seconds
+Conversation ID: conv_8f3a21
+Full metadata: {'model': 'Vedika AI', 'processing_time_ms': 18420, 'cost': {'costUsd': 0.0142, 'currency': 'USD'}, ...}
 ```
 
 ## 📚 Features
@@ -311,9 +311,59 @@ career = client.career.analysis(birth_info)
 print(f"Best fields: {', '.join(career.suitable_fields)}")
 ```
 
+### 🏠 Vastu Shastra (93 operation paths)
+
+Vastu takes a building: a plot polygon, room list, and compass zone. All 93 operation paths use `/v2/astrology/vastu/`. Python returns the full API envelope; read its `data` field for the result.
+
+```python
+from vedika.client import VastuOperation
+
+rooms = [
+    {"name": "Kitchen", "roomType": "kitchen", "zone": "SE"},
+    {"name": "Pooja", "roomType": "pooja", "zone": "NE"},
+]
+score = client.vastu_operation(VastuOperation.SCORE_OVERALL, {"rooms": rooms})
+print(score["data"]["score"], score["data"]["scoring"]["version"])
+
+# Retain this ID with this exact batch before sending. Reuse it after a
+# lost response or client restart; use a new ID for a different batch.
+batch_key = "property-import-001"
+batch = client.vastu_operation(
+    VastuOperation.ASSESSMENTS_BATCH,
+    {"items": [{"id": "property-1", "assessment": {
+        "inputSource": "plan-derived",
+        "rooms": [{"roomType": "kitchen", "zone": "SE"}],
+    }}]},
+    idempotency_key=batch_key,
+)
+for item in batch["data"]["results"]:
+    print(item["id"], item["status"], item["response"])
+
+plan = client.vastu_operation(VastuOperation.PLAN_FROM_REQUIREMENTS, {
+    "plot": {"width": 40, "length": 60, "facing": "east"},
+    "requirements": {
+        "bedrooms": 2, "toilets": 2, "floors": 1,
+        "hasKitchen": True, "hasLiving": True, "hasDining": True, "hasPooja": True,
+        "hasStudy": True, "hasGuest": False, "hasStore": False, "hasStaircase": False,
+    },
+    "includeSvg": False,
+})
+print(plan["data"]["rooms"])  # Geometry remains; SVG drawings are omitted.
+
+report = client.vastu_operation(VastuOperation.PLAN_REPORT, {
+    "rooms": [{"name": "Kitchen", "zone": "SE"}, {"name": "Pooja", "zone": "NE"}],
+    "format": "html",
+    "brand": {"reportTitle": "Property Vastu Report", "generatedFor": "Buyer"},
+})
+artifact = report["data"]["artifact"]
+print(artifact["filename"], artifact["content"])
+```
+
+A batch contains 1–20 properties. Missing or blank caller keys fail before network. Each item uses the existing assessment price; there is no batch fee. Inspect every item status even when the batch succeeds. The HTML artifact opens offline and can be printed to PDF. Scores are versioned conventions; compare the same version and equivalent room coverage. Detailed audits report missing input and do not certify physical survey completeness.
+
 ## 🌍 Multi-Language Support
 
-Vedika supports 22 languages:
+Vedika answers in 29 languages:
 
 ```python
 # Ask in Hindi
@@ -332,26 +382,42 @@ response = client.ask_question(
 ```
 
 **Supported languages:**
-- 🇮🇳 Indian: Hindi, Bengali, Telugu, Tamil, Gujarati, Kannada, Malayalam, Marathi, Punjabi, Odia, Assamese
-- 🌍 International: English, Spanish, French, German, Italian, Portuguese, Russian, Japanese, Korean, Chinese, Arabic
+- 🇮🇳 South Asian: Hindi (`hi`), Bengali (`bn`), Tamil (`ta`), Telugu (`te`), Marathi (`mr`),
+  Gujarati (`gu`), Kannada (`kn`), Malayalam (`ml`), Punjabi (`pa`), Odia (`od`), Assamese (`as`),
+  Urdu (`ur`), Nepali (`ne`), Sinhala (`si`)
+- 🌍 Other: English (`en`), Spanish (`es`), French (`fr`), German (`de`), Italian (`it`),
+  Portuguese (`pt`), Russian (`ru`), Arabic (`ar`), Persian (`fa`), Chinese (`zh`),
+  Japanese (`ja`), Korean (`ko`), Vietnamese (`vi`), Indonesian (`id`), Malay (`ms`)
+
+Pass one of the codes above. An unrecognised code is not rejected, and the language of the
+answer is then not guaranteed, so validate the code on your side.
+Voice answers cover a smaller set than text; read `/api/v1/voice/pricing` for the current
+per-tier voice languages.
 
 ## 🎨 Advanced Features
 
-### Voice AI (New in v33)
+### Voice AI
+
+`ask_voice()` uploads recorded audio and returns a `VoiceResponse`. Supply the
+voice tier identifier from the current API catalog. Check current availability,
+languages, access and pricing before calling it.
 
 ```python
-# Stream voice response (Business/Enterprise plans only)
-audio_stream = client.ask_voice(
-    question="What are my career prospects?",
-    birth_details=birth_info,
-    tier="vedika-standard",  # $0.072/query: balanced quality + latency (~1s)
-    # or "vedika-native" ($0.040): audio-native pipeline, 600+ languages (~800ms)
-    # or "vedika-jarvis" ($0.080): ultra-low-latency streaming (<500ms voice-to-voice)
-    language="hi"  # 22 languages supported
-)
+import os
 
-# Rate limits per tier (Business 30/min, Enterprise 100/min)
-# Access: Business ($120/mo) and Enterprise ($240/mo) plans only
+with open("question.wav", "rb") as audio:
+    voice = client.ask_voice(
+        audio=audio,
+        birth_details=birth_info,
+        tier=os.environ["VEDIKA_VOICE_TIER"],
+        language="hi",
+    )
+
+if voice.audio is not None:
+    with open("answer.mp3", "wb") as output:
+        output.write(voice.audio)
+else:
+    print(voice.response_text)
 ```
 
 ### Speed Modes
@@ -383,7 +449,7 @@ for chunk in client.ask_question_stream(
 ):
     print(chunk.text, end="", flush=True)
 
-# Events: 'started', 'progress', 'synthesis', 'data_sources', 'billing_completed', 'completed', 'error'
+# Events: 'started', 'progress', 'stage_completed', 'data_sources', 'billing_completed', 'billing_error', 'completed', 'error'
 ```
 
 ### Batch Processing
@@ -414,7 +480,7 @@ response2 = client.ask_question(another_question, birth_info)  # $0.05
 
 - **API Reference:** https://vedika.io/docs.html
 - **Tutorials:** https://vedika.io/docs.html#tutorials
-- **Examples:** See `examples/` directory
+- **Examples:** https://github.com/vedika-io/vedika-sdk-python/tree/main/examples (not shipped in `pip install` — see the Examples section below)
 - **Changelog:** [CHANGELOG.md](CHANGELOG.md)
 
 ## 💰 Pricing
@@ -436,7 +502,7 @@ See full pricing: https://vedika.io/pricing.html
 ### Environment Variables
 
 ```bash
-export VEDIKA_API_KEY="vk_test_your_api_key_here"
+export VEDIKA_API_KEY="vk_live_..."
 export VEDIKA_API_URL="https://api.vedika.io"  # Optional
 ```
 
@@ -444,11 +510,12 @@ export VEDIKA_API_URL="https://api.vedika.io"  # Optional
 
 ```python
 client = VedikaClient(
-    api_key="vk_test_...",
+    api_key="vk_live_...",
     timeout=60,  # Request timeout in seconds
     max_retries=3,  # Retry failed requests
     cache_enabled=True,  # Enable prompt caching for cost savings
-    language="en"  # Default language for responses
+    language="en",  # Default language for responses
+    allow_insecure_http=False  # Legacy option; cannot enable custom origins or remote HTTP
 )
 ```
 
@@ -501,17 +568,17 @@ pytest tests/test_chatbot.py::test_ask_question
 
 ## 📝 Examples
 
-Check out the `examples/` directory:
+`examples/` is **not included in a `pip install`** (only the `vedika` package
+is — `examples/` has no `__init__.py` and isn't declared as `package_data`) —
+clone the repo or browse it on GitHub to run these:
+https://github.com/vedika-io/vedika-sdk-python/tree/main/examples
 
 - `basic_chatbot.py` - Simple conversational astrology bot
 - `birth_chart_analysis.py` - Complete birth chart generation
 - `compatibility_checker.py` - Marriage compatibility analysis
 - `dosha_detector.py` - Comprehensive dosha analysis
-- `muhurtha_finder.py` - Find auspicious times
-- `multi_language.py` - Multi-language support demo
 - `streaming_example.py` - Real-time streaming responses
-- `flask_app.py` - Flask web application example
-- `django_integration.py` - Django integration example
+- `vastu_audit.py` - Vastu mandala projection, room placement, audit and scoring
 
 ## 🤝 Contributing
 
@@ -521,7 +588,7 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ```bash
 # Clone repository
-git clone https://github.com/vedika-intelligence/vedika-sdk-python.git
+git clone https://github.com/vedika-io/vedika-sdk-python.git
 cd vedika-sdk-python
 
 # Create virtual environment
@@ -542,8 +609,10 @@ pytest
 Make sure you're using a valid API key from https://vedika.io/dashboard.html
 
 Keys start with:
-- `vk_test_` for testing
 - `vk_live_` for production
+- `vk_ent_` for enterprise accounts
+
+Keys that start with `vk_test_` are rejected. To test without a key, use the free sandbox at `https://api.vedika.io/sandbox/...`.
 
 ### "Insufficient Credits"
 
@@ -565,15 +634,11 @@ You're sending too many requests. Wait a moment or upgrade your plan.
 
 - **Average response time:** 2.14 seconds (simple queries)
 - **Complex queries:** 28-36 seconds (advanced AI processing)
-- **Uptime:** 99.9% (3-tier ephemeris fallback)
-- **Accuracy:** 97.2% prediction accuracy
 
 ## 🔒 Security
 
 - ✅ API keys encrypted in transit (HTTPS)
-- ✅ GDPR compliant
-- ✅ No data retention (unless explicitly enabled)
-- ✅ Security score: 95/100 (A grade)
+- ✅ **Credential-routing policy:** credentials may use only `https://api.vedika.io` on its default HTTPS port, or literal loopback HTTP (`localhost`, `127.x.x.x`, `::1`) for local development. Custom HTTPS origins and remote HTTP are rejected, even with the legacy insecure-HTTP flag. Redirect protection keeps keys off a different origin. Browser applications must keep the real key on their server and use their own app-session transport.
 
 ## 📜 License
 
@@ -586,7 +651,7 @@ MIT License - see [LICENSE](LICENSE) file
 - **API Reference:** https://vedika.io/api-reference.html
 - **Dashboard:** https://vedika.io/dashboard.html
 - **Support:** support@vedika.io
-- **GitHub:** https://github.com/vedika-intelligence
+- **GitHub:** https://github.com/vedika-io
 
 ## ⭐ Support
 
@@ -613,8 +678,6 @@ If you find this SDK helpful, please:
 | Advanced AI Engine | ✅ Yes | ❌ No |
 | 22 Languages | ✅ Yes | ❌ English only |
 | Streaming | ✅ Yes | ❌ No |
-| Uptime | 99.9% | ~99% |
-| Security Score | 95/100 (A) | Unknown |
 | **Unique Value** | **Traditional + AI** | Traditional only |
 
 **Bottom line:** Vedika provides everything other astrology APIs offer, **PLUS** the only conversational AI chatbot capability in the market.
