@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.0.10] - 2026-09-17
+
+- The README no longer describes how the platform is built: removed an internal routing description, an internal build number, an agent count and a pipeline stage name from the documented streaming events.
+- The documented streaming event list now matches what the API emits: `started`, `progress`, `stage_completed`, `data_sources`, `billing_completed`, `billing_error`, `completed`, `error`. The previously listed `synthesis` event is not emitted.
+- The language section listed 22 languages and omitted six the API serves. It now lists all 29 with their codes. An unrecognised code is not rejected, so the README says to validate it client-side.
+- Replaced a stale feature count in the feature list.
+
 ## [3.0.9] - 2026-09-17
 
 - Vastu mandala responses changed in the API on 2026-09-17: heatmap and 64-pada devatas follow the numbered squares of Brihat Samhita 53.43-48, and 81-pada cells carry `verseSquare`, with `None` devata fields on the 28 squares the verse leaves unnamed.
