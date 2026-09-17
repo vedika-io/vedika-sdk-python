@@ -51,7 +51,7 @@ from .exceptions import (
     ValidationError
 )
 
-__version__ = "3.0.9"
+__version__ = "3.0.10"
 __author__ = "Vedika Intelligence"
 __email__ = "support@vedika.io"
 __url__ = "https://vedika.io"

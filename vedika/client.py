@@ -3603,7 +3603,7 @@ class VedikaClient:
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.api_key}",
             "X-API-Key": self.api_key,  # DEPRECATED — remove after 2026-10-20
-            "User-Agent": "vedika-python-sdk/3.0.9"
+            "User-Agent": "vedika-python-sdk/3.0.10"
         })
 
     def _request(
