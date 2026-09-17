@@ -182,8 +182,10 @@ pip install --upgrade vedika-sdk requests
 
 ### API Key Scopes
 
-- **Test keys** (`vk_test_`): Limited functionality, safe for development
-- **Live keys** (`vk_live_`): Full access, use only in production
+- **Live keys** (`vk_live_`): Issued on paid plans. Calls are billed to your wallet.
+- **Enterprise keys** (`vk_ent_`): Issued on the Enterprise plan instead of `vk_live_`. Calls are billed to your wallet.
+- **Sandbox keys** (`vk_sandbox_`): Work only on `/sandbox/*`, which returns sample data at no charge. A sandbox key is optional; it attributes sandbox calls to your account.
+- Keys that start with `vk_test_` are not issued, and the API rejects them. To test without spending credits, use the sandbox.
 - **Never commit keys**: Use environment variables or secret managers
 
 ### Network Security

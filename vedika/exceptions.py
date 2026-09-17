@@ -40,7 +40,7 @@ class AuthenticationError(VedikaAPIError):
 
     Solution:
     - Get a valid API key from https://vedika.io/dashboard.html
-    - Check that your key starts with vk_test_ or vk_live_
+    - Check that your key starts with vk_live_ (or vk_ent_ for enterprise keys)
     - Ensure you haven't accidentally exposed your key
 
     Example:
@@ -68,9 +68,9 @@ class RateLimitError(VedikaAPIError):
     - Upgrade your plan for higher limits
 
     Rate limits:
-    - Free tier: 10 requests/minute
-    - Starter: 60 requests/minute
-    - Professional: 300 requests/minute
+    - Starter: 30 requests/minute
+    - Professional: 60 requests/minute
+    - Business: 120 requests/minute
     - Enterprise: Custom limits
 
     Example:
@@ -95,14 +95,14 @@ class InsufficientCreditsError(VedikaAPIError):
     - Query would exceed available credits
 
     Solution:
-    - Add more credits at https://vedika.io/dashboard.html
-    - Check your credit balance before making requests
-    - Add funds at xalen.io/dashboard to continue
+    - Upgrade your plan at https://vedika.io/pricing
+    - Check your wallet balance before making requests
 
-    Credit costs:
-    - Simple queries: ~500 tokens ($0.19)
-    - Standard queries: ~800 tokens ($0.35)
-    - Complex queries: ~1,500 tokens ($0.65)
+    Plans:
+    - Starter: $12/month
+    - Professional: $60/month
+    - Business: $120/month
+    - Enterprise: $240/month
 
     Example:
         >>> try:
@@ -112,6 +112,32 @@ class InsufficientCreditsError(VedikaAPIError):
     """
 
     def __init__(self, message: str = "Insufficient credits"):
+        super().__init__(message, status_code=402)
+
+
+class SubscriptionExpiredError(VedikaAPIError):
+    """
+    Subscription expired — the billing period has ended.
+
+    Both ``SUBSCRIPTION_EXPIRED`` and plain ``INSUFFICIENT_BALANCE`` return
+    HTTP 402 on the Vedika API. The SDK branches on the
+    server's ``code`` field so callers can distinguish:
+
+    - ``SubscriptionExpiredError``: direct user to renew the subscription
+    - ``InsufficientCreditsError``: direct user to top up their wallet
+
+    Raised when server returns ``code == 'SUBSCRIPTION_EXPIRED'`` on a 402.
+
+    Example:
+        >>> try:
+        ...     response = client.ask_question(...)
+        ... except SubscriptionExpiredError:
+        ...     print("Please renew at https://vedika.io/dashboard")
+        ... except InsufficientCreditsError:
+        ...     print("Please add credits at https://vedika.io/dashboard")
+    """
+
+    def __init__(self, message: str = "Subscription expired"):
         super().__init__(message, status_code=402)
 
 
@@ -177,7 +203,7 @@ class TimeoutError(VedikaAPIError):
     Example:
         >>> # Increase timeout for complex queries
         >>> client = VedikaClient(
-        ...     api_key="vk_test_...",
+        ...     api_key="vk_live_...",
         ...     timeout=120  # 2 minutes
         ... )
         >>>
@@ -252,7 +278,8 @@ class NetworkError(VedikaAPIError):
 #
 # VedikaAPIError (base)
 # ├── AuthenticationError (401)
-# ├── InsufficientCreditsError (402)
+# ├── InsufficientCreditsError (402) — wallet underrun
+# ├── SubscriptionExpiredError (402) — billing period ended
 # ├── TimeoutError (408)
 # ├── ValidationError (422)
 # ├── RateLimitError (429)

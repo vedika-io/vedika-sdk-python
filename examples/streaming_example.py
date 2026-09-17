@@ -7,7 +7,6 @@ for better user experience.
 """
 
 import os
-import sys
 from vedika import VedikaClient
 from vedika.exceptions import VedikaAPIError
 
@@ -26,7 +25,7 @@ def main():
         "datetime": "1990-06-15T14:30:00+05:30",
         "latitude": 28.6139,
         "longitude": 77.2090,
-        "timezone": "Asia/Kolkata"
+        "timezone": "+05:30"
     }
 
     # Question
@@ -46,12 +45,11 @@ def main():
             birth_details=birth_details,
             language="en"
         ):
-            # Print each chunk as it arrives
-            print(chunk.text, end="", flush=True)
+            # Print each chunk as it arrives (chunks are plain strings)
+            print(chunk, end="", flush=True)
 
         print("\n" + "-" * 60)
         print(f"\n✅ Response complete!")
-        print(f"💰 Credits used: {chunk.credits_used if hasattr(chunk, 'credits_used') else 'N/A'}")
 
     except VedikaAPIError as e:
         print(f"\n\n❌ API Error: {e}")

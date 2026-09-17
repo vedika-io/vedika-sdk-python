@@ -9,7 +9,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="vedika-sdk",
-    version="1.0.0",
+    version="3.0.9",
     author="Vedika Intelligence",
     author_email="support@vedika.io",
     description="The only B2B astrology API with AI-powered chatbot queries",
@@ -23,22 +23,28 @@ setup(
         "Homepage": "https://vedika.io",
     },
     packages=find_packages(),
+    # PEP 561: ships vedika/py.typed so type checkers (mypy, pyright) treat the
+    # installed package as typed instead of falling back to Any everywhere.
+    # Previously missing from BOTH setup.py and MANIFEST.in, so even a source
+    # dist silently dropped the marker. package_data (not just MANIFEST.in) is
+    # required so `pip install` picks it up for wheel builds, not just sdist.
+    package_data={"vedika": ["py.typed"]},
+    include_package_data=True,
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
     ],
-    python_requires=">=3.8",
+    python_requires=">=3.10",
     install_requires=[
-        "requests>=2.28.0",
-        "urllib3>=1.26.0",
+        "requests>=2.33.0,<3",
+        "urllib3>=2.7.0,<3",
     ],
     extras_require={
         "dev": [
@@ -49,5 +55,5 @@ setup(
             "mypy>=1.0.0",
         ],
     },
-    keywords="astrology, vedic, api, AI, chatbot, horoscope, birth chart, compatibility, numerology",
+    keywords="astrology, vedic, api, AI, chatbot, horoscope, birth chart, compatibility, numerology, tarot, chinese astrology, iching, crystals, human design, feng shui, matrimony, spiritual",
 )

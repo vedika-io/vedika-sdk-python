@@ -1,9 +1,252 @@
 # Changelog
 
+## [3.0.9] - 2026-09-17
+
+- Vastu mandala responses changed in the API on 2026-09-17: heatmap and 64-pada devatas follow the numbered squares of Brihat Samhita 53.43-48, and 81-pada cells carry `verseSquare`, with `None` devata fields on the 28 squares the verse leaves unnamed.
+- `entrance/pada` results type the devata labels the API now returns on `pada`: `deityRosterName`, `deityNameClassification`, `deityPlacementClassification` and `deityPlacementSource` (all optional).
+- `SECURITY.md` lists the key types the API issues: `vk_live_`, `vk_ent_` and the sandbox-only `vk_sandbox_`. `vk_test_` keys are not issued and are rejected.
+- The README and `examples/README.md` list only example scripts that exist, and repository links point to `github.com/vedika-io`.
+- Removed internal tracking references from a source comment and this changelog.
+
+## [3.0.8] - 2026-09-16
+
+This is the first PyPI release since 3.0.5. It includes everything listed for 3.0.7 below, which was never published to PyPI.
+
+- Added `ask_vastu_report` and `QuestionResponse.vastu_context`: ask questions about a Vastu report without sending birth details.
+- Added multi-floor plan types and bounded conversation continuation.
+- Public error classes keep their documented contracts.
+- Package artifacts no longer carry internal service or provider names.
+- Added the `ar/room-capture` Vastu operation (`VastuOperation.AR_ROOM_CAPTURE`) with typed `VastuRoomCapture` requests, `pointCloudDensityBasis` on scan-quality requests, and an optional `capture` on saved-scan snapshots.
+- Credentials now use only the official HTTPS API origin or literal loopback HTTP. Custom HTTPS origins and remote HTTP are rejected; the legacy insecure-HTTP option cannot bypass this rule.
+- Added typed assessment batches with retained caller idempotency keys, per-item results, HTML report options, and SVG opt-out. All 93 operation responses match recorded Rust fixtures, including versioned scoring and audit coverage metadata.
+
+- **Compatibility change:** Python 3.10 or later is now required so the SDK can use urllib3 2.7.0 or later, which includes current redirect and decompression fixes. Requests 2.33.0 or later includes credential and archive-helper fixes. Python 3.8 and 3.9 are no longer supported. Both HTTP dependencies are capped below 3.0 pending major-version compatibility testing.
+- Package preparation scripts build local artifacts without changing Git or publishing.
+- **Behaviour change (Vastu API, 2026-09-17):** score `verdict` strings now describe agreement with the scored placement rules instead of giving building advice. The top-level `verified` field is now `false` on `room/*`, `placement/borewell`, `placement/well`, placement and specialized results when the guidance is later convention; use `placementVerified` and the per-field source labels for verse-backed parts. `reference/mandala/9-zone` labels every row `convention`, and remedies carry `remedyClassification` and `remedySource`. If your code shows `verdict` text or checks `verified`, review it for this change.
+
+
 All notable changes to the Vedika Python SDK will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [3.0.7] - 2026-09-07
+
+### Security
+
+- **`base_url` must now be a Vedika origin.** Until this release the constructor
+  checked the *shape* of `base_url` - scheme, no embedded credentials, bare
+  origin with no path or query - but never checked *where* it pointed. A
+  perfectly well-formed `base_url="https://attacker.invalid"` satisfied every
+  rule, and the first request carried a live `vk_live_*` key in both the
+  `Authorization` and `X-API-Key` headers to a host Vedika does not operate.
+
+  The client now refuses any host that is not `vedika.io`, a `*.vedika.io`
+  subdomain, or loopback. Matching is on the registrable name, so `notvedika.io`
+  and `api.vedika.io.attacker.com` are both rejected; a naive suffix test would
+  have accepted the first. The JavaScript SDK already enforced this; Python
+  now matches it.
+
+  **If you set `base_url` to your own gateway, this is a breaking change.** It is
+  deliberate: proxy Vedika server-side and keep the key on your server.
+
+- **`allow_insecure_http` is now inert.** The only thing it could ever permit was
+  a live API key travelling in cleartext to a remote host. Passing `True` with a
+  non-loopback `base_url` now raises instead of silently doing nothing, so a
+  caller who believes they opted in is told they did not. Loopback HTTP is
+  unaffected and still works for local development.
+
+### Note
+
+3.0.6 was tagged in this repository but never published to PyPI. The last
+release on PyPI is 3.0.5, which does **not** contain either of the fixes above.
+
+## [3.0.6] - 2026-06-15
+
+### Added (2026-08-11)
+- **Full Vastu Shastra surface** — 76 operations across 17 families (mandala projection, entrance, rooms, site placements, compliance audits, scoring, floor-plan generation, reference tables, direction/declination), all under `/v2/astrology/vastu/`. Generic `vastu(op, params)` escape hatch plus named helpers: `vastu_reference()`, `vastu_mandala_project()`, `vastu_entrance_pada()`/`vastu_entrance_recommend()`, `vastu_room()`, `vastu_placement()`, `vastu_audit()`, `vastu_score()`, `vastu_plan_generate()`/`vastu_plan_from_requirements()`, `vastu_declination()`. Verb selection is automatic: `reference/*` and `direction/declination` dispatch GET, everything else POST. Vastu takes a building (plot polygon, rooms, compass zone) — never a birth chart.
+
+### Security (2026-08-11)
+- **Fixed cross-origin redirect credential forwarding.** The legacy `X-API-Key` header was still forwarded to a redirect destination even in cases where `requests` correctly strips `Authorization` on a cross-origin or HTTPS→HTTP-downgrade redirect, leaking the key off-origin. The client session now drops `X-API-Key` alongside `Authorization` on any such redirect.
+- **Added a `base_url` origin policy.** The API key is now attached only to HTTPS origins by default; a non-loopback `http://` `base_url` is rejected unless the new `allow_insecure_http=True` client option opts in. Loopback (`localhost`, `127.0.0.1`, `::1`) is always allowed for local dev.
+
+### Changed (transition-compat — no breaking changes)
+- **Resilient v2-envelope unwrapping for the platform transition.** `_v2_payload()` previously returned any top-level `data` key unconditionally, which could mis-unwrap a bare reading that happened to nest a `data` block, and it only ran on the methods that called it. Two transition-sensitive families bypassed it entirely — `matrimony.unified_match` / `dosha_cancellation` (a verdict/money-sensitive family that, on an enveloped response, silently zeroed the score) and `dasha.current_all` — they now unwrap the envelope like every other v2 domain. Unwrapping is keyed on the canonical envelope markers (`success` / `billing` / `meta`) plus a dict `data`, so `billing` is no longer required.
+- **`get_western_relationship()` is now transition-tolerant.** Synastry/composite prose (`interpretation`, per-aspect `orb_quality`/`signifies`) may be absent on some responses while the computed geometry stays parity-exact. The result is normalized so those keys are always present; code reading them never raises `KeyError` from either engine.
+
+### Added
+- `normalize_western_relationship()` helper (exported).
+- `raw` field on `MatchResult`, `DoshaMatchResult`, and `AllDashaResult` so the full original payload is always retrievable (no field lost to the typed-model shape).
+
+### Notes
+- Fully backward-compatible. No breaking changes to existing consumers; method signatures unchanged, models gained only optional fields.
+
+## [2.3.0] - 2026-04-17
+
+### Added
+- `response_format="json"` option on `ask_question()` — server returns a `structured_response` object with parsed sections (title, preamble, sections with paragraphs/bullets/numbered). Original markdown `answer` still present. No pricing change.
+- New dataclasses: `StructuredResponse`, `StructuredResponseSection`.
+
+## [2.2.2] - 2026-04-17
+
+### Fixed
+- **`get_birth_chart()` and `check_compatibility()` were calling 404 endpoints.** Wrong paths shipped in v2.2.0 + v2.2.1. Both methods now hit the correct `/api/v1/chart` and `/api/v1/compatibility` endpoints. **Anyone on v2.2.0 or v2.2.1 should upgrade immediately.**
+
+### Changed
+- README cleaned up — removed internal architecture descriptions and provider-name mentions for clearer enterprise positioning.
+
+## [2.2.1] - 2026-04-16 [DEPRECATED — use 2.2.2+]
+
+### Note
+- v2.2.1 was bumped briefly during release process; functionally identical to 2.2.0.
+
+## [2.2.0] - 2026-04-16 [DEPRECATED — use 2.2.2+]
+
+### Added
+- **Voice AI** — Added `ask_voice()` for voice questions. Historical implementation labels and price estimates are omitted; use the current API catalog for availability and pricing.
+- **Speed modes** — `speed='fast'` (1.5–3s, English only, ~700-word cap) or `speed='standard'` (12–18s, all 30 languages, default).
+- **Multi-turn conversations** — pass back `conversation_id` from any 200 response to continue the conversation. Default 10 messages per conversation.
+- **Voice rate limits documented** — Business: 30 calls/min, 2,000/day. Enterprise: 100/min, 10,000/day.
+
+### Known Issues (fixed in 2.2.2)
+- `get_birth_chart()` and `check_compatibility()` call wrong endpoint paths → 404. Fixed in 2.2.2.
+
+## [2.1.0] - 2026-03-15
+
+### Added
+- **9 Convenience Methods** — Shorthand methods for the most common V2 operations:
+  - `get_panchang_today()` — Today's Panchang with no arguments needed
+  - `get_sade_sati()`, `get_chandrashtama()` — Quick dosha checks
+  - `get_kundli()`, `get_navamsa()` — Common chart types
+  - `get_guna_milan()` — Simplified compatibility matching
+  - `get_vimshottari_dasha()` — Default dasha system
+  - `get_daily_prediction()` — Daily prediction by rashi name
+  - `get_shadbala()` — Planetary strength analysis
+
+### Fixed
+- **Timezone documentation** — All docstrings now correctly specify UTC offset format (`"+05:30"`) instead of IANA names (`"Asia/Kolkata"`). IANA names are NOT supported by the API
+- **Example code** — `ask_question()` docstring example updated to use UTC offset timezone
+
+---
+
+## [2.0.0] - 2026-03-13
+
+### Added
+- **V2 Computation Endpoints** — 20+ new methods for direct access to V2 API (faster, cheaper)
+  - `get_birth_chart_v2()`, `get_dasha_v2()`, `get_doshas_v2()`, `get_compatibility_v2()`
+  - `get_panchang()`, `get_muhurta_v2()`, `get_divisional_chart()`
+  - `get_prediction()`, `get_ashtakavarga()`, `get_varshaphal()`, `get_strength()`
+  - `get_numerology_v2()` with 7 calculation types
+- **Western Astrology** — 4 new methods
+  - `get_western_transits()`, `get_western_progressions()`
+  - `get_western_solar_return()`, `get_western_relationship()`
+- **Horoscope** — `get_horoscope()` for daily/weekly/monthly, Vedic and Western
+- **Conversations** — `get_conversations()`, `delete_conversation()`
+- **Usage** — `get_usage()` for wallet balance
+- **Enhanced AI Chat** — `ask_question()` now supports system, speed, conversationId, partner_birth_details, include_remedies, category, response_format
+
+### Changed
+- Updated User-Agent to `vedika-python-sdk/2.0.0`
+- 30 language support (was 22)
+- Updated pricing: Starter $12, Pro $60, Business $120, Enterprise $240
+
+---
+
+## [1.3.0] - 2026-01-02
+
+### Added
+
+#### Free Sandbox Environment
+- **New sandbox endpoints** - Test all API features without an API key
+- `get_sandbox_horoscope()` - Daily/weekly/monthly horoscopes (mock data)
+- `get_sandbox_panchang()` - Today's panchang (mock data)
+- `sandbox_chat()` - AI chat testing (mock responses)
+- `get_sandbox_birth_chart()` - Birth chart generation (mock data)
+- Zero cost testing for development and integration
+
+#### New Computational Endpoints (15 new features)
+- `get_sade_sati()` - Saturn 7.5 year transit analysis with phases
+- `get_chandrashtama()` - Moon 8th house transit detection
+- `get_ritu()` - 6 Hindu seasons calculation
+- `get_solstice()` - Equinoxes and solstices
+- `get_anandadi_yoga()` - Weekday + Nakshatra yoga combinations
+- `get_auspicious_yoga()` - 27 yoga classifications
+- `get_auspicious_period()` - Good timing recommendations
+- `get_inauspicious_period()` - Bad periods to avoid
+- `get_gowri_nalla_neram()` - South Indian Choghadiya
+- `get_disha_shool()` - Inauspicious direction by weekday
+- `get_chandra_bala()` - Moon strength analysis
+- `get_tara_bala()` - Nakshatra compatibility scoring
+- `get_upagraha_positions()` - Sub-planet positions (Dhuma, Vyatipata, etc.)
+- `get_planet_relationships()` - Naisargika Maitri (natural friendships)
+
+#### Enhanced Compatibility Matching
+- `get_guna_milan()` - Full 36 Guna (Ashtakoota) matching
+  - All 8 Kootas: Varna, Vasya, Tara, Yoni, Graha Maitri, Gana, Bhakoot, Nadi
+  - Individual scores + total + recommendation
+  - Dosha detection with remedies
+
+### Changed
+- **5x faster response times** - Optimized parallel processing (12s vs 60s)
+- Improved error messages with actionable suggestions
+- Better rate limit handling with automatic retry
+
+### Fixed
+- Timezone handling for edge cases
+- Connection pooling for high-volume usage
+
+---
+
+## [1.2.0] - 2025-12-26
+
+### Added
+
+#### GraphQL Support
+- `graphql_query()` - Execute GraphQL queries against Vedika API
+- Full schema introspection support
+- Nested query optimization
+
+#### Webhook Integration
+- `register_webhook()` - Subscribe to real-time events
+- `verify_webhook_signature()` - Validate webhook authenticity
+- Supported events: `chart.generated`, `ai.response.complete`, `billing.threshold`
+
+#### Postman Collection
+- Official Postman collection published to API Network
+- Pre-configured environments (Sandbox/Production)
+- One-click import: https://www.postman.com/vedikaai/intelligence-platform
+
+### Changed
+- Updated base URL routing for better latency (geo-aware)
+- Improved streaming response handling
+
+---
+
+## [1.1.0] - 2025-12-15
+
+### Added
+
+#### Enhanced Muhurta Features
+- `get_choghadiya()` - Day/night Choghadiya periods
+- `get_hora()` - Planetary hour calculations
+- `get_rahu_kaal()` - Rahu Kaal timing
+- `get_gulika_kaal()` - Gulika Kaal timing
+- `get_yamaghanta()` - Yamaghanta periods
+- `get_abhijit_muhurta()` - Most auspicious muhurta
+- `get_brahma_muhurta()` - Pre-dawn auspicious time
+- `get_durmuhurta()` - Inauspicious muhurta periods
+
+#### Enhanced Dosha Analysis
+- `get_mangal_dosha()` - Mars dosha with intensity levels
+- `get_kaal_sarp_dosha()` - Kaal Sarp with type classification
+- `get_pitru_dosha()` - Ancestral karma indicators
+- `get_nadi_dosha()` - Nadi compatibility issues
+
+### Changed
+- Improved accuracy for planetary calculations (Vedika Ephemeris precision)
+- Better handling of DST transitions
+
+---
 
 ## [1.0.0] - 2025-11-08
 
@@ -12,8 +255,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Core Features
 - Initial release of Vedika Python SDK
 - `VedikaClient` class for interacting with Vedika Astrology API
-- Support for AI-powered conversational astrology queries (UNIQUE feature!)
-- Advanced AI intelligence integration
+- Support for AI-powered conversational astrology queries
+- Advanced AI-powered query processing
 
 #### API Methods
 - `ask_question()` - Ask conversational astrology questions
@@ -52,9 +295,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Request timeout configuration
 - HTTPS-only communication
 - Environment variable support for API keys
-- Comprehensive error messages
-- 14 Indian language support plus English
-- Prompt caching for 90% cost savings on repeated queries
+- 22 language support (including 11 Indian languages)
+- Prompt caching for cost savings on repeated queries
 
 #### Documentation
 - Comprehensive README with examples
@@ -62,7 +304,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Google-style docstrings for all public APIs
 - Security best practices guide
 - Contributing guidelines
-- Code of Conduct (Contributor Covenant 2.0)
 
 #### Development Tools
 - Python 3.8+ support
@@ -71,41 +312,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - flake8 linting
 - mypy type checking
 - pytest testing framework
-- Coverage reporting
-
-#### Examples
-- Basic chatbot example
-- Birth chart analysis
-- Compatibility checker
-- Dosha detector
-- Muhurtha finder
-- Multi-language support demo
-- Streaming responses
-- Flask web application integration
-- Django integration
-
-### Security
-- API keys encrypted in transit (HTTPS)
-- GDPR compliant
-- No data retention by default
-- Security score: 95/100 (A grade)
-- Comprehensive security documentation
-
-### Performance
-- Average response time: 2.14 seconds (simple queries)
-- Complex queries: 28-36 seconds (deep analysis)
-- 99.9% uptime with 3-tier ephemeris fallback
-- High citation accuracy from classical texts
-
-## [Unreleased]
-
-### Planned Features
-- Webhook support for real-time notifications
-- GraphQL API support
-- Additional ayanamsa systems
-- Extended dosha remedies database
-- Predictive transit analysis
-- Enhanced caching strategies
 
 ---
 
@@ -124,14 +330,13 @@ We follow [Semantic Versioning](https://semver.org/):
 - **Previous major version**: Security updates and critical bug fixes for 6 months
 - **Older versions**: No support
 
-### Release Cadence
-
-- **Major releases**: As needed for breaking changes
-- **Minor releases**: Monthly feature releases
-- **Patch releases**: As needed for bug fixes
-
 ---
 
 For the complete version history, see: https://github.com/vedika-io/vedika-sdk-python/releases
 
+[2.1.0]: https://github.com/vedika-io/vedika-sdk-python/releases/tag/v2.1.0
+[2.0.0]: https://github.com/vedika-io/vedika-sdk-python/releases/tag/v2.0.0
+[1.3.0]: https://github.com/vedika-io/vedika-sdk-python/releases/tag/v1.3.0
+[1.2.0]: https://github.com/vedika-io/vedika-sdk-python/releases/tag/v1.2.0
+[1.1.0]: https://github.com/vedika-io/vedika-sdk-python/releases/tag/v1.1.0
 [1.0.0]: https://github.com/vedika-io/vedika-sdk-python/releases/tag/v1.0.0

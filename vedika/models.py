@@ -5,7 +5,6 @@ Response models for the Vedika Astrology API.
 
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, field
-from datetime import datetime
 
 
 @dataclass
@@ -35,17 +34,108 @@ class BirthDetails:
 
 
 @dataclass
-class QuestionResponse:
+class StructuredResponseSection:
     """
-    Response from AI chatbot query (UNIQUE to Vedika!).
+    Section within a structured response.
 
     Attributes:
-        answer: Detailed astrological answer
-        confidence: Response metadata score
-        credits_used: Credits consumed for this query
-        processing_time: Time taken to process (seconds)
+        heading: Section heading text
+        level: Heading level (1-6)
+        paragraphs: List of paragraph strings
+        bullets: List of bullet points
+        numbered: List of numbered items
+    """
+    heading: str
+    level: int
+    paragraphs: List[str] = field(default_factory=list)
+    bullets: List[str] = field(default_factory=list)
+    numbered: List[str] = field(default_factory=list)
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'StructuredResponseSection':
+        """Create from API response dictionary."""
+        return cls(
+            heading=data.get("heading", ""),
+            level=int(data.get("level", 2)),
+            paragraphs=list(data.get("paragraphs", [])),
+            bullets=list(data.get("bullets", [])),
+            numbered=list(data.get("numbered", []))
+        )
+
+
+@dataclass
+class StructuredResponse:
+    """
+    Structured JSON response object (when response_format='json').
+
+    Attributes:
+        title: Title of the response (from H1/H2)
+        preamble: Content before first heading
+        sections: List of parsed sections
+        raw: Echo of the raw markdown
+    """
+    title: Optional[str] = None
+    preamble: Optional[str] = None
+    sections: List[StructuredResponseSection] = field(default_factory=list)
+    raw: str = ""
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'StructuredResponse':
+        """Create from API response dictionary."""
+        return cls(
+            title=data.get("title"),
+            preamble=data.get("preamble"),
+            sections=[StructuredResponseSection.from_dict(s) for s in data.get("sections", [])],
+            raw=data.get("raw", "")
+        )
+
+
+@dataclass
+class Citation:
+    """
+    A single citation referencing a classical astrological source.
+
+    All fields are optional and populated only when returned by the API.
+
+    Attributes:
+        id: Short ID of the cited passage
+        topic: Classical topic/rule reference (e.g. "Marriage — 7th house lord")
+        source: Source text (e.g. "BPHS", "Saravali", "Phaladeepika")
+        reference: Chapter and verse label supplied by the API
+        text: The cited passage text, if provided
+    """
+    id: Optional[str] = None
+    topic: Optional[str] = None
+    source: Optional[str] = None
+    reference: Optional[str] = None
+    text: Optional[str] = None
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'Citation':
+        """Create from API response dictionary."""
+        return cls(
+            id=data.get("id"),
+            topic=data.get("topic"),
+            source=data.get("source"),
+            reference=data.get("reference"),
+            text=data.get("text"),
+        )
+
+
+@dataclass
+class QuestionResponse:
+    """
+    Response from an AI query, with the original envelope retained in raw.
+
+    Attributes:
+        answer: The returned answer text
+        confidence: Legacy confidence field; zero when not returned
+        credits_used: Legacy credit count; zero when not returned, not a USD charge
+        processing_time: Reported duration in seconds; zero when not returned
         language: Response language
         sources: Astrological factors considered
+        citations: Classical-source citations when returned
+        structured_response: Parsed sections when response_format='json'
     """
     answer: str
     confidence: float
@@ -53,17 +143,61 @@ class QuestionResponse:
     processing_time: float
     language: str = "en"
     sources: List[str] = field(default_factory=list)
+    citations: List[Citation] = field(default_factory=list)
+    structured_response: Optional[StructuredResponse] = None
+    # the live server (verified against openapi.json
+    # /api/v1/astrology/query) returns `response` (not `answer`), nests
+    # engine/cost/wallet info under `metadata` (not top-level `confidence` /
+    # `creditsUsed` / `processingTime`), and returns `conversationId` — a field
+    # this model never exposed at all. `conversation_id` and `raw` are added
+    # (additive) so a caller who was reading the README's `response.birth_details`
+    # or `response.conversation_id` has a real, populated field to switch to.
+    conversation_id: Optional[str] = None
+    raw: Dict[str, Any] = field(default_factory=dict)
+    # Present when the answer came from a Vastu report (`ask_vastu_report`):
+    # row ids, cited rows, and whether the report was reused from the
+    # conversation. The report is caller-supplied and never verified.
+    vastu_context: Optional[Dict[str, Any]] = None
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'QuestionResponse':
-        """Create from API response dictionary."""
+        """Create from API response dictionary.
+
+        Accepts BOTH the legacy shape (`answer`/`confidence`/`creditsUsed`/
+        `processingTime`, top-level) and the live v2 shape (`response`/
+        `metadata.cost`/`metadata.processing_time_ms`/`conversationId`) so
+        neither an older fixture nor the current server breaks this model.
+        """
+        structured = None
+        if data.get("structuredResponse"):
+            structured = StructuredResponse.from_dict(data["structuredResponse"])
+
+        # Parse optional citations array.
+        # Tolerant to both missing key and null/non-list values.
+        raw_citations = data.get("citations") or []
+        citations = [
+            Citation.from_dict(c) if isinstance(c, dict) else Citation(text=str(c))
+            for c in raw_citations
+        ] if isinstance(raw_citations, list) else []
+
+        metadata = data.get("metadata") if isinstance(data.get("metadata"), dict) else {}
+        processing_time = data.get("processingTime")
+        if processing_time is None:
+            ms = metadata.get("processing_time_ms")
+            processing_time = (ms / 1000.0) if isinstance(ms, (int, float)) else 0.0
+
         return cls(
-            answer=data.get("answer", ""),
+            answer=data.get("answer", data.get("response", "")),
             confidence=data.get("confidence", 0.0),
             credits_used=data.get("creditsUsed", 0),
-            processing_time=data.get("processingTime", 0.0),
-            language=data.get("language", "en"),
-            sources=data.get("sources", [])
+            processing_time=processing_time,
+            language=data.get("language", metadata.get("language", "en")),
+            sources=data.get("sources", []),
+            citations=citations,
+            structured_response=structured,
+            conversation_id=data.get("conversationId") or data.get("conversation_id"),
+            raw=data,
+            vastu_context=data.get("vastuContext") if isinstance(data.get("vastuContext"), dict) else None,
         )
 
 
@@ -178,9 +312,22 @@ class DashaResponse:
             for d in data.get("mahadashas", [])
         ]
 
+        def _periods(key):
+            return [
+                Dasha(
+                    planet=d.get("planet", ""),
+                    start_date=d.get("startDate", ""),
+                    end_date=d.get("endDate", ""),
+                    duration_years=d.get("durationYears", 0.0),
+                    level=key,
+                )
+                for d in data.get(key, [])
+            ]
         return cls(
             mahadashas=mahadashas,
-            current_dasha=data.get("currentDasha")
+            antardashas=_periods("antardashas"),
+            pratyantardashas=_periods("pratyantardashas"),
+            current_dasha=data.get("currentDasha"),
         )
 
 
@@ -423,3 +570,636 @@ class NumerologyResponse:
             lucky_colors=data.get("luckyColors", []),
             lucky_days=data.get("luckyDays", [])
         )
+
+
+@dataclass
+class VoiceBilling:
+    """Customer-facing billing block on a voice response."""
+    cost_usd: float = 0.0
+    currency: str = "USD"
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'VoiceBilling':
+        return cls(
+            cost_usd=float(data.get("costUsd", 0.0)),
+            currency=data.get("currency", "USD"),
+        )
+
+
+@dataclass
+class VoiceResponse:
+    """
+    Voice query result envelope.
+
+    Types the response from ``/api/v1/voice``.
+
+    The server returns binary ``audio/mpeg`` with metadata in the
+    ``X-Vedika-Voice-Meta`` base64-JSON header. When TTS fails, it falls back
+    to a JSON body with ``audio=None`` and the text answer in ``response``.
+
+    This model normalizes both paths: ``audio`` holds the binary audio bytes
+    (or None in fallback mode), ``response_text`` holds the narrated answer,
+    and everything else is parsed from either the JSON body or the decoded
+    header.
+
+    Attributes:
+        audio: Raw audio bytes (``audio/mpeg``) or None on TTS fallback
+        response_text: AI-generated text answer (always present)
+        language: Detected/output language (ISO 639-1)
+        tier: Public voice-tier label
+        billing: Customer-facing cost block
+        duration_ms: End-to-end processing duration
+        stt_duration_sec: Speech-to-text duration
+        tts_duration_sec: Text-to-speech duration (None on fallback)
+        conversation_id: Conversation ID for multi-turn threading
+        is_fallback: True when TTS failed and audio is None
+    """
+    audio: Optional[bytes] = None
+    response_text: str = ""
+    language: Optional[str] = None
+    tier: Optional[str] = None
+    billing: Optional[VoiceBilling] = None
+    duration_ms: Optional[int] = None
+    stt_duration_sec: Optional[float] = None
+    tts_duration_sec: Optional[float] = None
+    conversation_id: Optional[str] = None
+    is_fallback: bool = False
+
+    @classmethod
+    def from_binary(
+        cls,
+        audio_bytes: bytes,
+        meta: Dict[str, Any],
+    ) -> 'VoiceResponse':
+        """Build from binary audio + parsed X-Vedika-Voice-Meta header."""
+        billing_data = meta.get("billing")
+        return cls(
+            audio=audio_bytes,
+            response_text="",  # text is spoken, not embedded
+            language=meta.get("language"),
+            tier=meta.get("tier"),
+            billing=VoiceBilling.from_dict(billing_data) if isinstance(billing_data, dict) else None,
+            duration_ms=meta.get("durationMs"),
+            stt_duration_sec=meta.get("sttDurationSec"),
+            tts_duration_sec=meta.get("ttsDurationSec"),
+            conversation_id=meta.get("conversationId"),
+            is_fallback=False,
+        )
+
+    @classmethod
+    def from_json(cls, data: Dict[str, Any]) -> 'VoiceResponse':
+        """Build from JSON fallback body (TTS failed)."""
+        billing_data = data.get("billing")
+        return cls(
+            audio=None,
+            response_text=data.get("response", ""),
+            language=data.get("language"),
+            tier=data.get("tier"),
+            billing=VoiceBilling.from_dict(billing_data) if isinstance(billing_data, dict) else None,
+            duration_ms=data.get("durationMs"),
+            stt_duration_sec=data.get("sttDurationSec"),
+            tts_duration_sec=data.get("ttsDurationSec"),
+            conversation_id=data.get("conversationId"),
+            is_fallback=True,
+        )
+
+
+# ═══════════════════════════════════════════
+# Extended Domain Models
+# ═══════════════════════════════════════════
+
+
+@dataclass
+class TarotCard:
+    """A single tarot card."""
+    name: str = ""
+    arcana: str = ""  # "major" or "minor"
+    suit: Optional[str] = None
+    number: Optional[int] = None
+    orientation: str = "upright"  # "upright" or "reversed"
+    meaning: str = ""
+    keywords: List[str] = field(default_factory=list)
+    image_url: Optional[str] = None
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'TarotCard':
+        return cls(
+            name=data.get("name", ""),
+            arcana=data.get("arcana", ""),
+            suit=data.get("suit"),
+            number=data.get("number"),
+            orientation=data.get("orientation", "upright"),
+            meaning=data.get("meaning", ""),
+            keywords=data.get("keywords", []),
+            image_url=data.get("imageUrl"),
+        )
+
+
+@dataclass
+class TarotReading:
+    """Full tarot reading with spread."""
+    spread: str = ""
+    question: Optional[str] = None
+    cards: List[TarotCard] = field(default_factory=list)
+    interpretation: str = ""
+    theme: Optional[str] = None
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'TarotReading':
+        return cls(
+            spread=data.get("spread", ""),
+            question=data.get("question"),
+            cards=[TarotCard.from_dict(c) for c in data.get("cards", [])],
+            interpretation=data.get("interpretation", ""),
+            theme=data.get("theme"),
+        )
+
+
+@dataclass
+class SpreadInfo:
+    """Tarot spread definition."""
+    id: str = ""
+    name: str = ""
+    card_count: int = 0
+    description: str = ""
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'SpreadInfo':
+        return cls(
+            id=data.get("id", ""),
+            name=data.get("name", ""),
+            card_count=data.get("cardCount", 0),
+            description=data.get("description", ""),
+        )
+
+
+@dataclass
+class SpreadList:
+    """List of available tarot spreads."""
+    spreads: List[SpreadInfo] = field(default_factory=list)
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'SpreadList':
+        return cls(
+            spreads=[SpreadInfo.from_dict(s) for s in data.get("spreads", [])],
+        )
+
+
+@dataclass
+class ChineseZodiac:
+    """Chinese zodiac animal result."""
+    animal: str = ""
+    polarity: str = ""
+    fixed_element: str = ""
+    year_element: str = ""
+    traits: List[str] = field(default_factory=list)
+    compatible: List[str] = field(default_factory=list)
+    incompatible: List[str] = field(default_factory=list)
+    year: int = 0
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'ChineseZodiac':
+        return cls(
+            animal=data.get("animal", ""),
+            polarity=data.get("polarity", ""),
+            fixed_element=data.get("fixedElement", ""),
+            year_element=data.get("yearElement", ""),
+            traits=data.get("traits", []),
+            compatible=data.get("compatible", []),
+            incompatible=data.get("incompatible", []),
+            year=data.get("year", 0),
+        )
+
+
+@dataclass
+class BaZiChart:
+    """BaZi (Four Pillars) chart."""
+    year_pillar: Dict[str, str] = field(default_factory=dict)
+    month_pillar: Dict[str, str] = field(default_factory=dict)
+    day_pillar: Dict[str, str] = field(default_factory=dict)
+    hour_pillar: Dict[str, str] = field(default_factory=dict)
+    day_master: str = ""
+    day_master_strength: str = ""
+    favorable_elements: List[str] = field(default_factory=list)
+    unfavorable_elements: List[str] = field(default_factory=list)
+    luck_pillars: List[Dict[str, Any]] = field(default_factory=list)
+    interpretation: str = ""
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'BaZiChart':
+        return cls(
+            year_pillar=data.get("yearPillar", {}),
+            month_pillar=data.get("monthPillar", {}),
+            day_pillar=data.get("dayPillar", {}),
+            hour_pillar=data.get("hourPillar", {}),
+            day_master=data.get("dayMaster", ""),
+            day_master_strength=data.get("dayMasterStrength", ""),
+            favorable_elements=data.get("favorableElements", []),
+            unfavorable_elements=data.get("unfavorableElements", []),
+            luck_pillars=data.get("luckPillars", []),
+            interpretation=data.get("interpretation", ""),
+        )
+
+
+@dataclass
+class KuaResult:
+    """Feng Shui Kua number result."""
+    kua_number: int = 0
+    group: str = ""
+    auspicious_directions: List[str] = field(default_factory=list)
+    inauspicious_directions: List[str] = field(default_factory=list)
+    best_directions: Dict[str, str] = field(default_factory=dict)
+    gender: str = ""
+    birth_year: int = 0
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'KuaResult':
+        return cls(
+            kua_number=data.get("kuaNumber", 0),
+            group=data.get("group", ""),
+            auspicious_directions=data.get("auspiciousDirections", []),
+            inauspicious_directions=data.get("inauspiciousDirections", []),
+            best_directions=data.get("bestDirections", {}),
+            gender=data.get("gender", ""),
+            birth_year=data.get("birthYear", 0),
+        )
+
+
+@dataclass
+class Hexagram:
+    """I Ching hexagram result."""
+    number: int = 0
+    chinese_name: str = ""
+    english_name: str = ""
+    lines: List[Dict[str, Any]] = field(default_factory=list)
+    upper_trigram: str = ""
+    lower_trigram: str = ""
+    judgment: str = ""
+    image: str = ""
+    moving_lines: List[str] = field(default_factory=list)
+    relating_hexagram: Optional[Dict[str, Any]] = None
+    interpretation: str = ""
+    question: Optional[str] = None
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'Hexagram':
+        return cls(
+            number=data.get("number", 0),
+            chinese_name=data.get("chineseName", ""),
+            english_name=data.get("englishName", ""),
+            lines=data.get("lines", []),
+            upper_trigram=data.get("upperTrigram", ""),
+            lower_trigram=data.get("lowerTrigram", ""),
+            judgment=data.get("judgment", ""),
+            image=data.get("image", ""),
+            moving_lines=data.get("movingLines", []),
+            relating_hexagram=data.get("relatingHexagram"),
+            interpretation=data.get("interpretation", ""),
+            question=data.get("question"),
+        )
+
+
+@dataclass
+class Crystal:
+    """Crystal recommendation."""
+    name: str = ""
+    properties: List[str] = field(default_factory=list)
+    chakra: str = ""
+    element: str = ""
+    zodiac_affinity: List[str] = field(default_factory=list)
+    color: str = ""
+    usage: str = ""
+    image_url: Optional[str] = None
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'Crystal':
+        return cls(
+            name=data.get("name", ""),
+            properties=data.get("properties", []),
+            chakra=data.get("chakra", ""),
+            element=data.get("element", ""),
+            zodiac_affinity=data.get("zodiacAffinity", []),
+            color=data.get("color", ""),
+            usage=data.get("usage", ""),
+            image_url=data.get("imageUrl"),
+        )
+
+
+@dataclass
+class BodyGraph:
+    """Human Design body graph."""
+    type: str = ""
+    strategy: str = ""
+    authority: str = ""
+    profile: str = ""
+    defined_centers: List[str] = field(default_factory=list)
+    open_centers: List[str] = field(default_factory=list)
+    channels: List[Dict[str, Any]] = field(default_factory=list)
+    incarnation_cross: str = ""
+    gates: List[Dict[str, Any]] = field(default_factory=list)
+    interpretation: str = ""
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'BodyGraph':
+        return cls(
+            type=data.get("type", ""),
+            strategy=data.get("strategy", ""),
+            authority=data.get("authority", ""),
+            profile=data.get("profile", ""),
+            defined_centers=data.get("definedCenters", []),
+            open_centers=data.get("openCenters", []),
+            channels=data.get("channels", []),
+            incarnation_cross=data.get("incarnationCross", ""),
+            gates=data.get("gates", []),
+            interpretation=data.get("interpretation", ""),
+        )
+
+
+@dataclass
+class HDType:
+    """Human Design type summary."""
+    type: str = ""
+    strategy: str = ""
+    not_self_theme: str = ""
+    signature: str = ""
+    authority: str = ""
+    description: str = ""
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'HDType':
+        return cls(
+            type=data.get("type", ""),
+            strategy=data.get("strategy", ""),
+            not_self_theme=data.get("notSelfTheme", ""),
+            signature=data.get("signature", ""),
+            authority=data.get("authority", ""),
+            description=data.get("description", ""),
+        )
+
+
+@dataclass
+class MatchResult:
+    """Matrimony unified match result.
+
+    ``raw`` holds the full original payload so no engine-specific field is ever
+    lost to the typed-model shape — important across the TS->Rust transition,
+    where the matchmaking TOTAL may differ by engine (value divergence) while
+    ``kootas`` / ``dosha_analysis`` stay passthrough dicts that parse from either.
+    """
+    total_score: int = 0
+    max_score: int = 36
+    percentage: float = 0.0
+    verdict: str = ""
+    kootas: List[Dict[str, Any]] = field(default_factory=list)
+    dosha_analysis: Dict[str, Any] = field(default_factory=dict)
+    recommendation: str = ""
+    raw: Optional[Dict[str, Any]] = None
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'MatchResult':
+        return cls(
+            total_score=data.get("totalScore", 0),
+            max_score=data.get("maxScore", 36),
+            percentage=data.get("percentage", 0.0),
+            verdict=data.get("verdict", ""),
+            kootas=data.get("kootas", []),
+            dosha_analysis=data.get("doshaAnalysis", {}),
+            recommendation=data.get("recommendation", ""),
+            raw=data if isinstance(data, dict) else None,
+        )
+
+
+@dataclass
+class DoshaMatchResult:
+    """Dosha cancellation result for matrimony."""
+    dosha_type: str = ""
+    person1_has_dosha: bool = False
+    person2_has_dosha: bool = False
+    cancelled: bool = False
+    cancellation_reasons: List[str] = field(default_factory=list)
+    severity: Optional[str] = None
+    remedies: List[str] = field(default_factory=list)
+    explanation: str = ""
+    raw: Optional[Dict[str, Any]] = None
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'DoshaMatchResult':
+        return cls(
+            dosha_type=data.get("doshaType", ""),
+            person1_has_dosha=data.get("person1HasDosha", False),
+            person2_has_dosha=data.get("person2HasDosha", False),
+            cancelled=data.get("cancelled", False),
+            cancellation_reasons=data.get("cancellationReasons", []),
+            severity=data.get("severity"),
+            remedies=data.get("remedies", []),
+            explanation=data.get("explanation", ""),
+            raw=data if isinstance(data, dict) else None,
+        )
+
+
+@dataclass
+class MantraResult:
+    """Mantra recommendation."""
+    mantra: str = ""
+    transliteration: str = ""
+    meaning: str = ""
+    deity: str = ""
+    planet: str = ""
+    repetitions: int = 0
+    best_time: str = ""
+    additional_mantras: List[Dict[str, str]] = field(default_factory=list)
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'MantraResult':
+        return cls(
+            mantra=data.get("mantra", ""),
+            transliteration=data.get("transliteration", ""),
+            meaning=data.get("meaning", ""),
+            deity=data.get("deity", ""),
+            planet=data.get("planet", ""),
+            repetitions=data.get("repetitions", 0),
+            best_time=data.get("bestTime", ""),
+            additional_mantras=data.get("additionalMantras", []),
+        )
+
+
+@dataclass
+class DeityResult:
+    """Deity recommendation."""
+    deity: str = ""
+    reason: str = ""
+    associated_planet: str = ""
+    worship_method: str = ""
+    auspicious_day: str = ""
+    offerings: List[str] = field(default_factory=list)
+    direction: str = ""
+    additional_deities: List[Dict[str, str]] = field(default_factory=list)
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'DeityResult':
+        return cls(
+            deity=data.get("deity", ""),
+            reason=data.get("reason", ""),
+            associated_planet=data.get("associatedPlanet", ""),
+            worship_method=data.get("worshipMethod", ""),
+            auspicious_day=data.get("auspiciousDay", ""),
+            offerings=data.get("offerings", []),
+            direction=data.get("direction", ""),
+            additional_deities=data.get("additionalDeities", []),
+        )
+
+
+@dataclass
+class PastLifeResult:
+    """Past life karmic indicators."""
+    indicators: List[Dict[str, Any]] = field(default_factory=list)
+    purva_punya: str = ""
+    twelfth_house: str = ""
+    karmic_debts: List[str] = field(default_factory=list)
+    karmic_blessings: List[str] = field(default_factory=list)
+    interpretation: str = ""
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'PastLifeResult':
+        return cls(
+            indicators=data.get("indicators", []),
+            purva_punya=data.get("purvaPunya", ""),
+            twelfth_house=data.get("twelfthHouse", ""),
+            karmic_debts=data.get("karmicDebts", []),
+            karmic_blessings=data.get("karmicBlessings", []),
+            interpretation=data.get("interpretation", ""),
+        )
+
+
+@dataclass
+class DailyBundle:
+    """Daily bundle combining multiple daily insights."""
+    horoscope: Dict[str, Any] = field(default_factory=dict)
+    panchang: Dict[str, Any] = field(default_factory=dict)
+    tarot_card: Optional[TarotCard] = None
+    mantra: Optional[Dict[str, str]] = None
+    crystal: Optional[Dict[str, Any]] = None
+    date: str = ""
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'DailyBundle':
+        tc = data.get("tarotCard")
+        return cls(
+            horoscope=data.get("horoscope", {}),
+            panchang=data.get("panchang", {}),
+            tarot_card=TarotCard.from_dict(tc) if isinstance(tc, dict) else None,
+            mantra=data.get("mantra"),
+            crystal=data.get("crystal"),
+            date=data.get("date", ""),
+        )
+
+
+@dataclass
+class AllDashaResult:
+    """All dasha systems current periods. Every system block beyond
+    ``vimshottari`` is optional, so a response that omits a system (engine-
+    specific across the TS->Rust transition) parses cleanly."""
+    vimshottari: Dict[str, Any] = field(default_factory=dict)
+    ashtottari: Optional[Dict[str, Any]] = None
+    chara: Optional[Dict[str, Any]] = None
+    yogini: Optional[Dict[str, Any]] = None
+    recommended: str = ""
+    raw: Optional[Dict[str, Any]] = None
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'AllDashaResult':
+        return cls(
+            vimshottari=data.get("vimshottari", {}),
+            ashtottari=data.get("ashtottari"),
+            chara=data.get("chara"),
+            yogini=data.get("yogini"),
+            recommended=data.get("recommended", ""),
+            raw=data if isinstance(data, dict) else None,
+        )
+
+
+@dataclass
+class HealthResult:
+    """Health astrology result."""
+    vulnerable_areas: List[Dict[str, Any]] = field(default_factory=list)
+    current_transits: str = ""
+    recommendations: List[str] = field(default_factory=list)
+    ayurvedic_dosha: str = ""
+    healing_modalities: List[str] = field(default_factory=list)
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'HealthResult':
+        return cls(
+            vulnerable_areas=data.get("vulnerableAreas", []),
+            current_transits=data.get("currentTransits", ""),
+            recommendations=data.get("recommendations", []),
+            ayurvedic_dosha=data.get("ayurvedicDosha", ""),
+            healing_modalities=data.get("healingModalities", []),
+        )
+
+
+@dataclass
+class CareerResult:
+    """Career astrology result."""
+    suitable_fields: List[str] = field(default_factory=list)
+    tenth_house: str = ""
+    career_yogas: List[Dict[str, str]] = field(default_factory=list)
+    transit_forecast: str = ""
+    auspicious_periods: List[Dict[str, str]] = field(default_factory=list)
+    guidance: str = ""
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'CareerResult':
+        return cls(
+            suitable_fields=data.get("suitableFields", []),
+            tenth_house=data.get("tenthHouse", ""),
+            career_yogas=data.get("careerYogas", []),
+            transit_forecast=data.get("transitForecast", ""),
+            auspicious_periods=data.get("auspiciousPeriods", []),
+            guidance=data.get("guidance", ""),
+        )
+
+
+# ═══════════════════════════════════════════
+# TS->Rust Transition-Tolerant Helpers (SDK 3.0.6)
+# ═══════════════════════════════════════════
+#
+# The TS->Rust cutover aligns Rust v2 responses to the live TS contract, so most
+# families parse unchanged from either engine (the ``.get(default)`` parsing in
+# the models above is already shape-tolerant). A few families have a KNOWN
+# transition divergence between supported server versions:
+#   - western synastry/composite: the Rust engine may OMIT the ``interpretation``,
+#     ``orbQuality`` / ``orb_quality`` and ``signifies`` prose blocks while the
+#     computed geometry (planets, aspects, orbs) stays parity-exact.
+#   - matchmaking scoring: total may differ by engine (value, not shape).
+# Western relationship results are returned as raw dicts (untyped), which is
+# already tolerant; this helper additionally GUARANTEES the divergent keys exist
+# (defaulted) so downstream code that reads ``["interpretation"]`` never raises a
+# KeyError regardless of which engine produced the response. It invents no data.
+
+
+def normalize_western_relationship(raw: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """Return a western synastry/composite dict with the transition-divergent
+    prose keys always present (defaulted to "" / []), regardless of engine.
+
+    Pure shape-tolerance — no data is fabricated, the original payload is
+    preserved and only missing keys are backfilled with empty values. Per-aspect
+    ``orb_quality``/``orbQuality`` are normalised to a single ``orb_quality`` key
+    while keeping the original keys intact.
+    """
+    r: Dict[str, Any] = dict(raw) if isinstance(raw, dict) else {}
+    aspects = r.get("aspects")
+    if isinstance(aspects, list):
+        norm_aspects = []
+        for a in aspects:
+            if isinstance(a, dict):
+                a = dict(a)
+                a.setdefault("orb_quality", a.get("orbQuality", ""))
+                a.setdefault("signifies", "")
+                a.setdefault("interpretation", "")
+            norm_aspects.append(a)
+        r["aspects"] = norm_aspects
+    else:
+        r.setdefault("aspects", [])
+    r.setdefault("interpretation", "")
+    return r
