@@ -311,9 +311,9 @@ career = client.career.analysis(birth_info)
 print(f"Best fields: {', '.join(career.suitable_fields)}")
 ```
 
-### 🏠 Vastu Shastra (93 operation paths)
+### 🏠 Vastu Shastra (98 operation paths)
 
-Vastu takes a building: a plot polygon, room list, and compass zone. All 93 operation paths use `/v2/astrology/vastu/`. Python returns the full API envelope; read its `data` field for the result.
+Vastu takes a building: a plot polygon, room list, and compass zone. All 98 operation paths use `/v2/astrology/vastu/`. Python returns the full API envelope; read its `data` field for the result.
 
 ```python
 from vedika.client import VastuOperation
@@ -358,6 +358,33 @@ report = client.vastu_operation(VastuOperation.PLAN_REPORT, {
 artifact = report["data"]["artifact"]
 print(artifact["filename"], artifact["content"])
 ```
+
+Large jobs and report questions:
+
+```python
+# Queue 1-1,000 assessments. The key is mandatory: store it with this exact
+# body and reuse it after a lost response to get the original job back
+# (data["replayed"] is True) instead of paying twice. Each item is charged
+# after it succeeds.
+submitted = client.vastu_job_submit(
+    {"operation": "assessments", "items": [{"id": "p1", "input": {"inputSource": "plan-derived", "rooms": rooms}}]},
+    idempotency_key="import-2026-10-01",
+)
+job_id = submitted["data"]["jobId"]
+print(client.vastu_job_status(job_id)["data"]["counts"])
+for item in client.vastu_job_result_items(job_id):  # follows nextCursor
+    print(item["id"], item["status"])
+client.vastu_job_cancel(job_id)  # stops the items that have not run
+
+# Ask about a report PDF. The upload is paid; its key names this one file.
+upload = client.upload_vastu_report(pdf_bytes, idempotency_key="plan-upload-001", filename="plan.pdf")
+answer = client.ask_vastu_report(
+    "What should I fix first?",
+    report_ref={"type": "upload", "id": upload["uploadId"]},
+)
+```
+
+The named helpers (`vastu_listing_assessment`, `vastu_score`, `vastu_audit`, `vastu_room`, `vastu_placement` and the rest) take `idempotency_key=`. Pass a key you saved when a retry may come from a new call.
 
 A batch contains 1–20 properties. Missing or blank caller keys fail before network. Each item uses the existing assessment price; there is no batch fee. Inspect every item status even when the batch succeeds. The HTML artifact opens offline and can be printed to PDF. Scores are versioned conventions; compare the same version and equivalent room coverage. Detailed audits report missing input and do not certify physical survey completeness.
 
@@ -512,7 +539,8 @@ export VEDIKA_API_URL="https://api.vedika.io"  # Optional
 client = VedikaClient(
     api_key="vk_live_...",
     timeout=60,  # Request timeout in seconds
-    max_retries=3,  # Retry failed requests
+    max_retries=3,  # Retries for 429 rate limits and for calls that are safe to resend
+    max_retry_wait=60,  # Longest pause between retries, in seconds
     cache_enabled=True,  # Enable prompt caching for cost savings
     language="en",  # Default language for responses
     allow_insecure_http=False  # Legacy option; cannot enable custom origins or remote HTTP
@@ -612,11 +640,22 @@ Keys start with:
 - `vk_live_` for production
 - `vk_ent_` for enterprise accounts
 
-Keys that start with `vk_test_` are rejected. To test without a key, use the free sandbox at `https://api.vedika.io/sandbox/...`.
+Keys that start with `vk_test_` are rejected. To test without a key, use the free sandbox at `https://api.vedika.io/sandbox/...`. From the SDK, reach it with `client.request("POST", "/sandbox/v2/astrology/kundli", json={...})`; the client's `base_url` stays the bare production origin.
 
 ### "Insufficient Credits"
 
 Add credits to your account: https://vedika.io/dashboard.html
+
+A 402 is never retried. The exception carries the wallet figures from the response, in USD:
+
+```python
+from vedika import InsufficientCreditsError
+
+try:
+    client.ask_question(question="...", birth_details={...})
+except InsufficientCreditsError as e:
+    print(e.required, e.available, e.deficit, e.purchase_url)
+```
 
 ### "Request Timeout"
 
@@ -628,7 +667,26 @@ client = VedikaClient(api_key="...", timeout=120)  # 2 minutes
 
 ### "Rate Limit Exceeded"
 
-You're sending too many requests. Wait a moment or upgrade your plan.
+The client reads the response `code`, not the `x-ratelimit-*` headers. A per-minute limit (`RATE_LIMIT_EXCEEDED`) is retried after the `retryAfter` the API gives, up to `max_retries`; a wait longer than `max_retry_wait` is raised instead of slept on. A daily allowance that is used up (`DAILY_LIMIT_EXCEEDED`) is never retried and raises `DailyLimitError`, a subclass of `RateLimitError`:
+
+```python
+from vedika import DailyLimitError, RateLimitError
+
+try:
+    client.get_usage()
+except DailyLimitError:
+    ...  # allowance used up: upgrade your plan or wait for the reset
+except RateLimitError as e:
+    print(e.code, e.retry_after)
+```
+
+### Retries and idempotency
+
+A call is resent after a 5xx or a timeout only when that cannot charge you twice: GET and DELETE calls, and calls that carry an idempotency key. The client generates a key by itself only for the operations the API documents as accepting one (for example `ask_question` and the property, archive, quote and job Vastu operations); it never sends one elsewhere, because the API refuses a key on the other billed routes. To make any other call safe to repeat yourself, pass `idempotency_key=` where a method offers it. For an operation without a named method, use the generic call:
+
+```python
+data = client.request("POST", "/v2/astrology/kundli", json={"datetime": "1990-06-15T14:30:00", "latitude": 28.6139, "longitude": 77.209, "timezone": "+05:30"})
+```
 
 ## 📊 Performance
 
@@ -638,7 +696,7 @@ You're sending too many requests. Wait a moment or upgrade your plan.
 ## 🔒 Security
 
 - ✅ API keys encrypted in transit (HTTPS)
-- ✅ **Credential-routing policy:** credentials may use only `https://api.vedika.io` on its default HTTPS port, or literal loopback HTTP (`localhost`, `127.x.x.x`, `::1`) for local development. Custom HTTPS origins and remote HTTP are rejected, even with the legacy insecure-HTTP flag. Redirect protection keeps keys off a different origin. Browser applications must keep the real key on their server and use their own app-session transport.
+- ✅ **Credential-routing policy:** credentials may use only `https://api.vedika.io` on its default HTTPS port, or literal loopback HTTP (`localhost`, `127.x.x.x`, `::1`) for local development. Custom HTTPS origins and remote HTTP are rejected, even with the legacy insecure-HTTP flag. Redirects are never followed (a 3xx raises an error and no second request is sent), so keys and request bodies stay on the approved origin. Browser applications must keep the real key on their server and use their own app-session transport.
 
 ## 📜 License
 

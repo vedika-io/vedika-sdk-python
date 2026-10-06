@@ -46,12 +46,13 @@ from .exceptions import (
     VedikaAPIError,
     AuthenticationError,
     RateLimitError,
+    DailyLimitError,
     InsufficientCreditsError,
     SubscriptionExpiredError,
     ValidationError
 )
 
-__version__ = "3.0.10"
+from ._version import __version__
 __author__ = "Vedika Intelligence"
 __email__ = "support@vedika.io"
 __url__ = "https://vedika.io"
@@ -98,7 +99,21 @@ __all__ = [
     "VedikaAPIError",
     "AuthenticationError",
     "RateLimitError",
+    "DailyLimitError",
     "InsufficientCreditsError",
     "SubscriptionExpiredError",
     "ValidationError",
 ]
+
+from .client import (
+    VastuWorkflowData, VastuRemediationTaskData,
+    VastuRemediationTasksUpsertRequest, VastuRemediationTasksUpsertResponse,
+    VastuRemediationTasksListRequest, VastuRemediationTasksListResponse,
+    VastuRemediationTasksDeleteRequest, VastuRemediationTasksDeleteResponse,
+    VastuRemediationReassessRequest, VastuRemediationReassessResponse,
+    VastuMerchantCatalogUploadRequest, VastuMerchantCatalogUploadResponse,
+    VastuMerchantCatalogGetRequest, VastuMerchantCatalogGetResponse,
+    VastuMerchantCatalogDeleteRequest, VastuMerchantCatalogDeleteResponse,
+    VastuMerchantRemediesRequest, VastuMerchantRemediesResponse,
+)
+from .client import VastuDrawingSheetRequest, VastuDrawingSheetResponse, VastuDrawingSheetData, VastuWorkspaceRequest, VastuWorkspaceResponse, VastuWorkspaceData

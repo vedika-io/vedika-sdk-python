@@ -53,7 +53,7 @@ VEDIKA_API_KEY=vk_live_...
 
 ### Vastu Examples
 
-- **`vastu_audit.py`** - Vastu compliance audit (93 operations)
+- **`vastu_audit.py`** - Vastu compliance audit (98 operations)
   - Mandala projection, entrance classification, room placement, scoring
   - Vastu takes a BUILDING (plot polygon, rooms, compass zone), never a birth chart
   - Best for: Architectural / construction Vastu review

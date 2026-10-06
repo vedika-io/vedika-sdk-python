@@ -68,6 +68,6 @@ def test_report_and_drawing_request_options_match_public_contract():
         assert get_type_hints(cls)["includeSvg"] is bool
         assert "includeSvg" not in cls.__required_keys__
     hints = get_type_hints(VastuPlanReportRequest)
-    assert get_args(hints["format"]) == ("json", "html")
+    assert get_args(hints["format"]) == ("json", "html", "pdf")
     assert {"brand", "reportTitle", "generatedFor", "tenantName"} <= hints.keys()
     assert VastuPlanReportRequest.__required_keys__ == frozenset({"rooms"})
