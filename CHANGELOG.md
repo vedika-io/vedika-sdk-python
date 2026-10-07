@@ -1,5 +1,39 @@
 # Changelog
 
+## [3.1.1] - 2026-10-06
+
+### Fixed
+- The client no longer attaches an `Idempotency-Key` to every POST. The live API accepts a key only on the operations that list one, and answers `422 IDEMPOTENCY_NOT_SUPPORTED` to a key on any other billed route (and treats a caller-sent `X-Request-Id` as a key). A key is now generated only for those operations (with the header each one documents, `X-Idempotency-Key` for `/api/v1/astrology/query`), or sent unchanged when you pass `idempotency_key=`. If you pass a key to an operation that does not support one, the call is resent once without it. The voice call no longer sends a key either.
+- A POST without a key is no longer resent after a 5xx or a timeout, because the first attempt may already have been charged. Calls that carry a key, and GET and DELETE calls, are still retried with exponential backoff.
+- 402 raises `InsufficientCreditsError` with `required`, `available`, `deficit` (USD) and `purchase_url` read from the response, and is never retried. Previously the 402 body was reduced to a message.
+- 429 is read by its body `code`. `DAILY_LIMIT_EXCEEDED` (and `PLAN_LIMIT_EXCEEDED`) raise the new `DailyLimitError` (a `RateLimitError`) and are never retried. `RATE_LIMIT_EXCEEDED` waits the body `retryAfter` (or `Retry-After`), and any 429 asking for more than `max_retry_wait` (default 60 seconds, new constructor argument) is raised at once instead of slept on. The `x-ratelimit-*` headers are not used. Before, urllib3 retried every 429, slept on an uncapped `Retry-After`, and after the last attempt turned the 429 and 402 responses into a generic "Request failed" error.
+- Every exception now carries the API's `code`, and `RateLimitError` carries `retry_after`. The streaming and voice calls raise the same typed errors as the other calls.
+- A retried multipart upload sends byte-identical bytes, so the same `Idempotency-Key` is never paired with a different multipart boundary.
+- `get_divisional_chart("hora")` and `"D2"` called `/v2/astrology/hora-chart`, which the API does not serve. They now use `/v2/astrology/divisional-chart` with the division number in the body, and accept `"D9"`, `9` and the other supported divisions the same way.
+- The API key is sent once, as `Authorization: Bearer`, instead of also in `X-API-Key`.
+
+### Added
+- `VedikaClient.request(method, path, json=, params=, idempotency_key=)` calls any API operation with the client's auth, retry and error handling. It accepts only a path on the API origin, never a full URL.
+- Remediation, merchant catalog, portfolio, plan compare-versions, receipt verification and rule-version Vastu operations that are in this release's operation inventory. Some of these are not on the live API yet and answer 404 until it serves them.
+
+## [3.1.0] - 2026-10-01
+
+### Added
+- Async Vastu jobs: `vastu_job_submit`, `vastu_job_status`, `vastu_job_results` (cursor pagination), `vastu_job_result_items` and `vastu_job_cancel`, with request and response types. Submit requires a caller-retained `idempotency_key`; status and results are GET, cancel is POST. The generic `vastu()` now sends GET for `jobs/{id}` and `jobs/{id}/results`. The operation inventory is 98 logical paths.
+- `upload_vastu_report` sends a report PDF to `POST /api/v1/vastu/chat/uploads` as multipart under a required caller-retained key, and `ask_vastu_report` accepts `report_ref={"type": "upload", "id": ...}` alone.
+- The named Vastu helpers (`vastu_listing_assessment`, `vastu_score`, `vastu_audit`, `vastu_room`, `vastu_placement`, `vastu_mandala_project`, `vastu_entrance_pada`, `vastu_entrance_recommend`, `vastu_ar_scan_quality`, `vastu_ar_true_north_calibrate`, `vastu_plan_generate`, `vastu_plan_from_requirements`, `vastu_declination`) accept `idempotency_key=`, so a new call after a lost response can reuse the key and never pays twice.
+
+- Vastu `ar/attestation/challenge` operation and the optional `deviceAttestation` request field on `ar/room-capture`, `ar/scan-quality` and `scans/save`, with the `deviceAttestation` status now returned by those operations. The API reports `not_configured` until device attestation is enabled for a platform.
+
+### Fixed
+- Redirects are no longer followed. A 307 or 308 used to resend the private request body and the retained `Idempotency-Key` to the redirect target (only the auth headers were stripped). Every request path (ordinary, streaming and voice) now refuses any 3xx with `VedikaAPIError` and sends no second request, matching the Android and Swift SDKs.
+
+
+## [3.0.11] - 2026-09-24
+
+### Fixed
+- Vastu scan calls (`scans/save`, `scans/retrieve`, `scans/list`, `scans/delete`, `scans/timelapse`) no longer send a retry header. The API identifies a scan retry by `scanId` or the body's `requestId` and rejected every scan call that carried an `Idempotency-Key` with `422 IDEMPOTENCY_CONTRACT_UNSUPPORTED`. Passing an idempotency key to a scan call now raises a clear error before anything is sent, and scan calls are still retried on transient failures.
+
 ## [3.0.10] - 2026-09-17
 
 - The README no longer describes how the platform is built: removed an internal routing description, an internal build number, an agent count and a pipeline stage name from the documented streaming events.

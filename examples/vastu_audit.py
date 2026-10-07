@@ -2,7 +2,7 @@
 """
 Vastu Audit Example
 
-This example demonstrates the Vastu surface (93 operation paths).
+This example demonstrates the Vastu surface (98 operation paths).
 
 Vastu takes a BUILDING (plot polygon, room list, compass zone) — NEVER a
 birth chart. There is no `birth_details` anywhere in this example.
@@ -79,7 +79,7 @@ def main():
         print(f"  {declination}")
 
         # 8. Long-tail operation via the generic escape hatch — every one of the
-        #    93 paths in vastu-inventory.json is reachable this way even before
+        #    98 paths in vastu-inventory.json is reachable this way even before
         #    a dedicated method exists for it.
         print("\n🏭 Specialized building type (via generic vastu() escape hatch)")
         specialized = client.vastu("specialized/residential", {"rooms": rooms, "plot": plot})

@@ -57,8 +57,12 @@ def test_parses_the_legacy_shape_unchanged():
 def test_current_openapi_query_example_retains_all_public_fields():
     import json
     from pathlib import Path
+    import pytest
     root=Path(__file__).resolve().parents[3]
-    spec=json.loads((root/"web/vedika-public/openapi.json").read_text())
+    spec_path=root/"web/vedika-public/openapi.json"
+    if not spec_path.is_file():
+        pytest.skip("needs the monorepo's web/vedika-public/openapi.json (not in the standalone SDK repo)")
+    spec=json.loads(spec_path.read_text())
     example=spec["paths"]["/api/v1/astrology/query"]["post"]["responses"]["200"]["content"]["application/json"]["example"]
     result=QuestionResponse.from_dict(example)
     assert result.answer==example["response"]

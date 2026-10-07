@@ -18,9 +18,12 @@ class VedikaAPIError(Exception):
         ...     print(f"API error: {e}")
     """
 
-    def __init__(self, message: str, status_code: int = None):
+    def __init__(self, message: str, status_code: int = None, code: str = None):
         self.message = message
         self.status_code = status_code
+        # The API's machine-readable ``code`` (for example ``INSUFFICIENT_BALANCE``
+        # or ``DAILY_LIMIT_EXCEEDED``) when the response carried one.
+        self.code = code
         super().__init__(self.message)
 
     def __str__(self):
@@ -50,8 +53,8 @@ class AuthenticationError(VedikaAPIError):
         ...     print("Please provide a valid API key")
     """
 
-    def __init__(self, message: str = "Invalid API key"):
-        super().__init__(message, status_code=401)
+    def __init__(self, message: str = "Invalid API key", code: str = None):
+        super().__init__(message, status_code=401, code=code)
 
 
 class RateLimitError(VedikaAPIError):
@@ -67,23 +70,36 @@ class RateLimitError(VedikaAPIError):
     - Implement exponential backoff
     - Upgrade your plan for higher limits
 
-    Rate limits:
-    - Starter: 30 requests/minute
-    - Professional: 60 requests/minute
-    - Business: 120 requests/minute
-    - Enterprise: Custom limits
+    Limits depend on your plan. The API tells the two cases apart with the
+    body ``code``: ``RATE_LIMIT_EXCEEDED`` is the per-minute limit and clears
+    after ``retry_after`` seconds (the SDK waits for it and retries within
+    ``max_retries``); ``DAILY_LIMIT_EXCEEDED`` raises :class:`DailyLimitError`
+    and is never retried.
 
     Example:
-        >>> import time
         >>> try:
         ...     response = client.ask_question(...)
-        ... except RateLimitError:
-        ...     time.sleep(60)  # Wait 1 minute
-        ...     response = client.ask_question(...)  # Retry
+        ... except DailyLimitError:
+        ...     print("Daily allowance used up; upgrade or wait for the reset")
+        ... except RateLimitError as e:
+        ...     print(f"Still rate limited after retries; wait {e.retry_after}s")
     """
 
-    def __init__(self, message: str = "Rate limit exceeded"):
-        super().__init__(message, status_code=429)
+    def __init__(self, message: str = "Rate limit exceeded", code: str = None, retry_after: float = None):
+        super().__init__(message, status_code=429, code=code)
+        # Seconds the API asked the caller to wait, when it said.
+        self.retry_after = retry_after
+
+
+class DailyLimitError(RateLimitError):
+    """
+    The plan's daily call allowance is used up (``DAILY_LIMIT_EXCEEDED``).
+
+    Waiting a few seconds does not help: the allowance resets later in the day
+    (the response's ``retryAfter`` is only an estimate), so the SDK never retries
+    this error. Catch :class:`RateLimitError` to handle both kinds of 429, or
+    this subclass to tell them apart.
+    """
 
 
 class InsufficientCreditsError(VedikaAPIError):
@@ -98,21 +114,34 @@ class InsufficientCreditsError(VedikaAPIError):
     - Upgrade your plan at https://vedika.io/pricing
     - Check your wallet balance before making requests
 
-    Plans:
-    - Starter: $12/month
-    - Professional: $60/month
-    - Business: $120/month
-    - Enterprise: $240/month
+    A 402 is never retried: the API refused the call before charging, and a
+    retry cannot succeed until the wallet is topped up. The wallet figures from
+    the response are on the exception (USD): ``required``, ``available`` and
+    ``deficit``, plus ``purchase_url``.
 
     Example:
         >>> try:
         ...     response = client.ask_question(...)
-        ... except InsufficientCreditsError:
-        ...     print("Please add credits at https://vedika.io/dashboard.html")
+        ... except InsufficientCreditsError as e:
+        ...     print(f"Need ${e.required}, have ${e.available}; top up ${e.deficit}")
     """
 
-    def __init__(self, message: str = "Insufficient credits"):
-        super().__init__(message, status_code=402)
+    def __init__(
+        self,
+        message: str = "Insufficient credits",
+        code: str = None,
+        required: float = None,
+        available: float = None,
+        deficit: float = None,
+        purchase_url: str = None,
+    ):
+        super().__init__(message, status_code=402, code=code)
+        # Wallet figures in USD from the 402 body (``wallet.required``,
+        # ``wallet.available``, ``wallet.deficit``); ``None`` when not sent.
+        self.required = required
+        self.available = available
+        self.deficit = deficit
+        self.purchase_url = purchase_url
 
 
 class SubscriptionExpiredError(VedikaAPIError):
@@ -137,8 +166,8 @@ class SubscriptionExpiredError(VedikaAPIError):
         ...     print("Please add credits at https://vedika.io/dashboard")
     """
 
-    def __init__(self, message: str = "Subscription expired"):
-        super().__init__(message, status_code=402)
+    def __init__(self, message: str = "Subscription expired", code: str = None):
+        super().__init__(message, status_code=402, code=code)
 
 
 class ValidationError(VedikaAPIError):
@@ -177,8 +206,8 @@ class ValidationError(VedikaAPIError):
         ...     print(f"Invalid input: {e}")
     """
 
-    def __init__(self, message: str = "Validation error"):
-        super().__init__(message, status_code=422)
+    def __init__(self, message: str = "Validation error", code: str = None):
+        super().__init__(message, status_code=422, code=code)
 
 
 class TimeoutError(VedikaAPIError):
@@ -283,5 +312,6 @@ class NetworkError(VedikaAPIError):
 # ├── TimeoutError (408)
 # ├── ValidationError (422)
 # ├── RateLimitError (429)
+# │   └── DailyLimitError (429, never retried)
 # ├── ServerError (500+)
 # └── NetworkError (connection issues)

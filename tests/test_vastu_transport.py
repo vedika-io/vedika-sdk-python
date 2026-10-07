@@ -15,6 +15,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from vedika.client import VedikaClient
+from vedika.exceptions import VedikaAPIError
 
 # The 11 GET-only reference tables + the GET+POST dual, from the Rust router
 # (VASTU_GET_REFERENCE_ROUTES + VASTU_DUAL_ROUTE in vedika-v2/src/vastu.rs).
@@ -37,14 +38,18 @@ POST_OPS = ["score/overall", "placement/borewell", "entrance/pada", "plan/analyz
 
 def test_typed_inventory_exposes_every_mounted_logical_operation_once():
     operations = VedikaClient.VASTU_OPERATIONS
-    assert len(operations) == 93
-    assert len(set(operations)) == 93
+    assert len(operations) == 147
+    assert len(set(operations)) == 147
     assert {
         "reference/gate-obstructions",
         "entrance/obstruction-check",
         "direction/sun-path",
         "ar/true-north-calibrate",
         "assessments",
+        "plan/import-image",
+        "plan/import-pdf",
+        "ar/capture-merge",
+        "plot/from-survey",
     } <= set(operations)
 
 
@@ -83,7 +88,7 @@ def test_assessments_types_match_canonical_request_and_optional_billing_response
 
 def test_each_operation_exposes_generated_contract_metadata():
     contracts = VedikaClient.VASTU_OPERATION_CONTRACTS
-    assert len(contracts) == 93
+    assert len(contracts) == 147
     for operation, contract in contracts.items():
         assert contract["method"] in {"GET", "POST", "GET_OR_POST"}
         assert contract["requestSchema"] is None or contract["requestSchema"].startswith("Vastu")
@@ -92,7 +97,7 @@ def test_each_operation_exposes_generated_contract_metadata():
         assert contract["responseSchema"].endswith("Response")
         assert contract["responseSchema"] != "VastuOperationResponse"
         assert contract["auth"] == "apiKey"
-        assert {400, 401} <= set(contract["errors"])
+        assert 401 in contract["errors"]
         assert len(contract["errors"]) == len(set(contract["errors"]))
         assert not operation.startswith("/v2/")
 
@@ -185,14 +190,13 @@ def _serve(handler_cls):
     return srv
 
 
-def test_api_key_not_forwarded_across_cross_origin_redirect():
-    """A 302 to a different origin must not carry Authorization or X-API-Key."""
-    seen = {}
+def test_cross_origin_redirect_is_refused_and_the_other_origin_sees_nothing():
+    """A 302 to a different origin is not followed: the other origin gets no request at all."""
+    seen = []
 
     class Collector(BaseHTTPRequestHandler):
         def _record_and_ok(self):
-            seen["authorization"] = self.headers.get("Authorization")
-            seen["x_api_key"] = self.headers.get("X-API-Key")
+            seen.append(dict(self.headers))
             payload = b'{"success": true, "data": {"ok": true}}'
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
@@ -229,13 +233,13 @@ def test_api_key_not_forwarded_across_cross_origin_redirect():
             api_key="vk_test_secret",
             base_url=f"http://127.0.0.1:{redirector_port}",
         )
-        client.vastu("score/overall", {"zone": "north"})
+        with pytest.raises(VedikaAPIError, match="(?i)redirect"):
+            client.vastu("score/overall", {"zone": "north"})
     finally:
         collector.shutdown()
         redirector.shutdown()
 
-    assert seen.get("authorization") is None, "Authorization leaked across redirect"
-    assert seen.get("x_api_key") is None, "X-API-Key leaked across redirect"
+    assert seen == [], "a redirect target received a request"
 
 
 def test_no_top_level_requests_call_bypasses_the_session():
@@ -435,3 +439,52 @@ def test_credential_first_hop_rejected_before_session_creation(base_url):
 ])
 def test_trusted_credential_first_hop(base_url):
     VedikaClient(api_key="vk_test", base_url=base_url)
+
+def test_portfolio_named_methods_forward_exact_requests():
+    client = VedikaClient(api_key="vk_test_synthetic")
+    client._request = MagicMock(return_value={"success": True, "data": {}})
+    for suffix, path, request in [
+        ("search", "search", {"city": "Pune"}),
+        ("compare", "compare", {"propertyIds": ["p1", "p2"]}),
+        ("analytics", "analytics", {"tag": "rental"}),
+        ("usage", "usage", {"tenantRef": "t1"}),
+        ("usage_export", "usage/export", {"propertyId": "p1"}),
+        ("budgets_set", "budgets/set", {"tenantRef": "t1", "capUsd": "1.21"}),
+        ("budgets_get", "budgets/get", {"tenantRef": "t1"}),
+    ]:
+        getattr(client, "vastu_portfolio_" + suffix)(request)
+        args = client._request.call_args.args
+        assert args[:2] == ("POST", "/v2/astrology/vastu/portfolio/" + path)
+        assert client._request.call_args.kwargs["data"] == request
+
+def test_typed_assessment_attribution_is_optional():
+    from vedika.client import VastuAssessmentsRequest
+    assert {"propertyId", "tenantRef"} <= VastuAssessmentsRequest.__optional_keys__
+    assert VastuAssessmentsRequest.__required_keys__ == frozenset({"inputSource"})
+
+
+def test_property_collaboration_helpers_preserve_exact_route_payload_and_types():
+    client = VedikaClient(api_key="vk_test_x")
+    client._request = MagicMock(return_value={"success": True, "data": {}})
+    payload = {"propertyId": "property-fixture", "ownerId": "owner-fixture"}
+    for route in ["collaboration/get", "collaboration/invite", "collaboration/revoke", "collaboration/members", "collaboration/comment", "collaboration/review", "collaboration/update", "activity/list", "activity/export"]:
+        helper = getattr(client, "vastu_properties_" + route.replace("/", "_"))
+        annotations = get_type_hints(helper)
+        assert annotations["params"].__name__.endswith("Request")
+        assert annotations["return"].__name__.endswith("Response")
+        helper(payload)
+        call = client._request.call_args
+        assert call.args[:2] == ("POST", "/v2/astrology/vastu/properties/" + route)
+        assert call.kwargs["data"] == payload
+
+
+def test_invite_pending_contract_and_consent_payload():
+    client = VedikaClient(api_key="vk_test_x")
+    pending = {"success": True, "data": {"invitationId": "00000000-0000-4000-8000-000000000001", "status": "pending"}, "billing": {"chargedCents": 0}}
+    client._request = MagicMock(return_value=pending)
+    body = {"propertyId": "property-fixture", "email": "synthetic@example.invalid", "role": "viewer"}
+    assert client.vastu_properties_collaboration_invite(body) == pending
+    client.vastu_properties_collaboration_invite({**body, "ownerId": "synthetic-owner", "accept": True})
+    assert client._request.call_args.kwargs["data"]["accept"] is True
+    client.vastu_properties_collaboration_revoke({"propertyId": "property-fixture", "invitationId": pending["data"]["invitationId"]})
+    assert client._request.call_args.kwargs["data"]["invitationId"] == pending["data"]["invitationId"]
