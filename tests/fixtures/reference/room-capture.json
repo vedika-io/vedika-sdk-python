@@ -1,0 +1,372 @@
+{
+ "fixture": "room-3x4-yaw0",
+ "about": "A 3 m by 4 m kitchen in the south-east corner of a traced 9 m by 12 m house, door on the east wall 1 m from the south corner; web capture, plan +v already true north.",
+ "session": {
+  "captureId": "fx-room-3x4-yaw0",
+  "capturedAtEpoch": 1789000000,
+  "device": {
+   "platform": "web",
+   "method": "webxr-hit",
+   "depth": "none"
+  },
+  "headingFrame": "magnetic",
+  "north": {
+   "referenceFrame": "true",
+   "headingSource": "deviceorientationabsolute",
+   "declinationDeg": 1.2,
+   "declinationProvenance": "fixture"
+  },
+  "headingSamples": [
+   {
+    "headingDeg": 6.8,
+    "forward": [
+     0.173648,
+     -0.3,
+     -0.984808
+    ]
+   },
+   {
+    "headingDeg": 14.05,
+    "forward": [
+     0.292372,
+     -0.3,
+     -0.956305
+    ]
+   },
+   {
+    "headingDeg": 21.3,
+    "forward": [
+     0.406737,
+     -0.3,
+     -0.913545
+    ]
+   },
+   {
+    "headingDeg": 28.55,
+    "forward": [
+     0.515038,
+     -0.3,
+     -0.857167
+    ]
+   },
+   {
+    "headingDeg": 35.8,
+    "forward": [
+     0.615661,
+     -0.3,
+     -0.788011
+    ]
+   },
+   {
+    "headingDeg": 43.05,
+    "forward": [
+     0.707107,
+     -0.3,
+     -0.707107
+    ]
+   },
+   {
+    "headingDeg": 50.3,
+    "forward": [
+     0.788011,
+     -0.3,
+     -0.615661
+    ]
+   },
+   {
+    "headingDeg": 57.55,
+    "forward": [
+     0.857167,
+     -0.3,
+     -0.515038
+    ]
+   },
+   {
+    "headingDeg": 64.8,
+    "forward": [
+     0.913545,
+     -0.3,
+     -0.406737
+    ]
+   },
+   {
+    "headingDeg": 72.05,
+    "forward": [
+     0.956305,
+     -0.3,
+     -0.292372
+    ]
+   },
+   {
+    "headingDeg": 79.3,
+    "forward": [
+     0.984808,
+     -0.3,
+     -0.173648
+    ]
+   },
+   {
+    "headingDeg": 86.55,
+    "forward": [
+     0.99863,
+     -0.3,
+     -0.052336
+    ]
+   },
+   {
+    "headingDeg": 93.8,
+    "forward": [
+     0.997564,
+     -0.3,
+     0.069756
+    ]
+   },
+   {
+    "headingDeg": 101.05,
+    "forward": [
+     0.981627,
+     -0.3,
+     0.190809
+    ]
+   },
+   {
+    "headingDeg": 108.3,
+    "forward": [
+     0.951057,
+     -0.3,
+     0.309017
+    ]
+   },
+   {
+    "headingDeg": 115.55,
+    "forward": [
+     0.906308,
+     -0.3,
+     0.422618
+    ]
+   },
+   {
+    "headingDeg": 122.8,
+    "forward": [
+     0.848048,
+     -0.3,
+     0.529919
+    ]
+   }
+  ],
+  "outline": {
+   "source": "traced",
+   "worldCorners": [
+    [
+     0.7,
+     -1.4,
+     2.3
+    ],
+    [
+     9.7,
+     -1.4,
+     2.3
+    ],
+    [
+     9.7,
+     -1.4,
+     -9.7
+    ],
+    [
+     0.7,
+     -1.4,
+     -9.7
+    ]
+   ],
+   "closingTap": [
+    0.7,
+    -1.4,
+    2.3
+   ]
+  },
+  "rooms": [
+   {
+    "id": "r1",
+    "label": "kitchen",
+    "labelSource": "user",
+    "floorIndex": 0,
+    "heightM": 2.8,
+    "worldCorners": [
+     [
+      6.7,
+      -1.4,
+      2.3
+     ],
+     [
+      9.7,
+      -1.4,
+      2.3
+     ],
+     [
+      9.7,
+      -1.4,
+      -1.7
+     ],
+     [
+      6.7,
+      -1.4,
+      -1.7
+     ]
+    ],
+    "closingTap": [
+     6.7,
+     -1.4,
+     2.3
+    ],
+    "openings": [
+     {
+      "kind": "door",
+      "widthM": 0.9,
+      "heightM": 2.1,
+      "confidence": "high",
+      "centerWorld": [
+       9.7,
+       -1.4,
+       1.3
+      ]
+     }
+    ]
+   }
+  ],
+  "quality": {
+   "pointCloudDensity": null,
+   "pointCloudDensityBasis": "none",
+   "coveragePercent": null,
+   "scanDurationSec": 160,
+   "scannedAreaM2": 108,
+   "expectedRoomCount": 1,
+   "gpsConfidence": null
+  }
+ },
+ "expected": {
+  "capture": {
+   "schema": "vedika.roomCapture/1",
+   "captureId": "fx-room-3x4-yaw0",
+   "capturedAtEpoch": 1789000000,
+   "device": {
+    "platform": "web",
+    "method": "webxr-hit",
+    "depth": "none"
+   },
+   "frame": {
+    "units": "metres",
+    "axes": "+X east,+Y true north",
+    "north": {
+     "referenceFrame": "true",
+     "headingSource": "deviceorientationabsolute",
+     "declinationDeg": 1.2,
+     "declinationProvenance": "fixture",
+     "yawSamples": 17,
+     "yawSpreadDeg": 1.22,
+     "compassConfidence": 0.939
+    },
+    "planToWorld": {
+     "units": "metres",
+     "origin": [
+      0.7,
+      -1.4,
+      2.3
+     ],
+     "xAxis": [
+      1.0,
+      0,
+      -5.12e-07
+     ],
+     "yAxis": [
+      -5.12e-07,
+      0,
+      -1.0
+     ]
+    }
+   },
+   "outline": {
+    "polygon": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      9.0,
+      0.0
+     ],
+     [
+      9.0,
+      12.0
+     ],
+     [
+      0.0,
+      12.0
+     ]
+    ],
+    "source": "traced"
+   },
+   "rooms": [
+    {
+     "id": "r1",
+     "label": "kitchen",
+     "labelSource": "user",
+     "polygon": [
+      [
+       6.0,
+       0.0
+      ],
+      [
+       9.0,
+       0.0
+      ],
+      [
+       9.0,
+       4.0
+      ],
+      [
+       6.0,
+       4.0
+      ]
+     ],
+     "areaM2": 12.0,
+     "heightM": 2.8,
+     "floorIndex": 0,
+     "openings": [
+      {
+       "kind": "door",
+       "centerXY": [
+        9.0,
+        1.0
+       ],
+       "widthM": 0.9,
+       "heightM": 2.1,
+       "confidence": "high"
+      }
+     ]
+    }
+   ],
+   "quality": {
+    "polygonClosure": true,
+    "closureGapM": 0.0,
+    "pointCloudDensity": null,
+    "pointCloudDensityBasis": "none",
+    "coveragePercent": null,
+    "scanDurationSec": 160,
+    "scannedAreaM2": 108,
+    "roomCount": 1,
+    "expectedRoomCount": 1,
+    "roomsTagged": 1,
+    "gpsConfidence": null
+   },
+   "attestation": "caller-reported"
+  },
+  "roomZones": {
+   "r1": "SE"
+  },
+  "doorCenterXY": [
+   9,
+   1
+  ],
+  "status": 200
+ }
+}

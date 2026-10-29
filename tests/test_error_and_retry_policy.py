@@ -2,9 +2,9 @@
 
 402 is never retried and carries the wallet figures. A 429 is read by its body
 `code`: RATE_LIMIT_EXCEEDED waits `retryAfter` (capped) and retries,
-DAILY_LIMIT_EXCEEDED is never retried, and the `x-ratelimit-*` headers are never
-consulted. 401 is never retried. A POST without an idempotency key is not
-resent after a 5xx.
+DAILY_LIMIT_EXCEEDED and MONTHLY_SPEND_LIMIT_REACHED are never retried, and the
+`x-ratelimit-*` headers are never consulted. 401 is never retried. A POST
+without an idempotency key is not resent after a 5xx.
 """
 
 import json
@@ -120,6 +120,28 @@ def test_daily_limit_is_never_retried_and_ignores_headers(sleeps):
     assert error.value.code == "DAILY_LIMIT_EXCEEDED" and error.value.retry_after == 3600
 
 
+def test_monthly_spend_limit_is_never_retried_and_surfaces_its_code(sleeps):
+    body = {"success": False, "code": "MONTHLY_SPEND_LIMIT_REACHED", "message": "Monthly spend limit reached", "retryAfter": 1}
+    headers = {"x-ratelimit-remaining": "59", "Retry-After": "1"}
+    with serve(lambda i, r: (429, body, headers)) as (seen, client):
+        with pytest.raises(DailyLimitError) as error:
+            client(max_retries=3).get_usage()
+    assert len(seen) == 1 and sleeps == []
+    assert isinstance(error.value, RateLimitError)
+    assert error.value.status_code == 429
+    assert error.value.code == "MONTHLY_SPEND_LIMIT_REACHED"
+    assert error.value.message == "Monthly spend limit reached"
+
+
+def test_monthly_spend_limit_without_a_message_does_not_claim_a_daily_limit(sleeps):
+    with serve(lambda i, r: (429, {"code": "MONTHLY_SPEND_LIMIT_REACHED"})) as (seen, client):
+        with pytest.raises(RateLimitError) as error:
+            client(max_retries=3).get_usage()
+    assert len(seen) == 1 and sleeps == []
+    assert error.value.code == "MONTHLY_SPEND_LIMIT_REACHED"
+    assert "daily" not in error.value.message.lower()
+
+
 def test_rate_limit_waits_retry_after_and_retries(sleeps):
     limited = {"success": False, "code": "RATE_LIMIT_EXCEEDED", "retryAfter": 2}
     with serve(lambda i, r: (429, limited, {"x-ratelimit-remaining": "0"}) if i == 0 else (200, {"ok": True})) as (seen, client):
@@ -194,12 +216,14 @@ def test_retry_after_on_a_503_is_capped(sleeps):
 
 # ---- idempotency -----------------------------------------------------------
 
-def test_ask_question_sends_x_idempotency_key_only_and_reuses_it_on_retry(sleeps):
+def test_ask_question_sends_one_key_in_both_headers_and_reuses_it_on_retry(sleeps):
     with serve(lambda i, r: (503, {}) if i == 0 else (200, {"success": True, "answer": "ok"})) as (seen, client):
         client().ask_question("Career?", BIRTH)
     assert len(seen) == 2
     keys = [idem_headers(r) for r in seen]
-    assert set(keys[0]) == {"x-idempotency-key"} and keys[0] == keys[1] and keys[0]["x-idempotency-key"]
+    # The question handler names the charge from Idempotency-Key, so both carry the one key.
+    assert set(keys[0]) == {"x-idempotency-key", "idempotency-key"} and keys[0] == keys[1]
+    assert keys[0]["x-idempotency-key"] and keys[0]["x-idempotency-key"] == keys[0]["idempotency-key"]
 
 
 def test_uncertified_calls_send_no_idempotency_or_request_id_header():
@@ -240,9 +264,13 @@ def test_other_idempotency_codes_are_not_swallowed():
 
 
 def test_certified_header_table():
-    from vedika._idempotency import certified_header
+    from vedika._idempotency import certified_header, certified_headers
 
     assert certified_header("POST", "/api/v1/astrology/query") == "X-Idempotency-Key"
+    assert certified_headers("POST", "/api/v1/astrology/query") == ("X-Idempotency-Key", "Idempotency-Key")
+    assert certified_headers("POST", "/v2/vastu/jobs") == ("Idempotency-Key",)
+    assert certified_headers("POST", "/v2/astrology/tithi") == ("X-Idempotency-Key",)
+    assert certified_headers("POST", "/v2/astrology/kundli") == ()
     assert certified_header("POST", "/v2/vastu/jobs") == "Idempotency-Key"
     assert certified_header("POST", "/v2/astrology/vastu/properties/create") == "Idempotency-Key"
     assert certified_header("GET", "/v2/lifestyle/zodiac-food/aries") == "Idempotency-Key"
@@ -347,7 +375,7 @@ def test_divisional_chart_rejects_an_unknown_name():
 def test_version_is_the_same_everywhere():
     root = Path(__file__).resolve().parent.parent
     setup_version = re.search(r'version="([^"]+)"', (root / "setup.py").read_text(encoding="utf-8")).group(1)
-    changelog_version = re.search(r"^## \[([^\]]+)\]", (root / "CHANGELOG.md").read_text(encoding="utf-8"), re.M).group(1)
+    changelog_version = re.search(r"^## \[(?!Unreleased\])([^\]]+)\]", (root / "CHANGELOG.md").read_text(encoding="utf-8"), re.M).group(1)
     assert setup_version == vedika.__version__ == changelog_version
     client = VedikaClient(api_key="vk_test_x")
     assert client.session.headers["User-Agent"] == f"vedika-python-sdk/{setup_version}"

@@ -18,6 +18,7 @@ recursive-include examples *.md
 
 # Include tests (for source distributions)
 recursive-include tests *.py
+recursive-include tests/fixtures/reference *.json
 
 # Exclude build artifacts
 global-exclude *.pyc

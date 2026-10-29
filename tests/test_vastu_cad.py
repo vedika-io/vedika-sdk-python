@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from reference_fixtures import reference_path
 from unittest.mock import MagicMock
 import pytest
 from vedika.client import VedikaClient
@@ -12,10 +13,7 @@ from vedika.client import VedikaClient
     ('import-ifc', 'vastu_plan_import_ifc', {'ifc':'synthetic','maxChargeUsd':'0.03'}),
 ])
 def test_budget_and_real_rust_response(tail, method, body):
-    root=Path(__file__).resolve().parents[3]
-    corpus_path=root/'web/vedika-public/js/catalog/vastu-sandbox-demos.json'
-    if not corpus_path.is_file():
-        pytest.skip("needs the monorepo's recorded sandbox corpus (not in the standalone SDK repo)")
+    corpus_path=reference_path('web/vedika-public/js/catalog/vastu-sandbox-demos.json', 'vastu-cad-responses.json')
     corpus=json.loads(corpus_path.read_text())
     recorded=corpus['demos']['vastu__plan_'+tail.replace('-','_')]
     client=VedikaClient(api_key='vk_test')

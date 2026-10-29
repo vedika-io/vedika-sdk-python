@@ -1,9 +1,10 @@
 """
 Vedika Python SDK
-The only B2B astrology API with AI-powered chatbot queries.
+Astrology APIs with structured calculations and conversational readings.
 """
 
 from .client import VedikaClient
+from .vastu_room_capture import upload_room_capture, merge_room_captures
 from .models import (
     BirthDetails,
     QuestionResponse,
@@ -49,7 +50,11 @@ from .exceptions import (
     DailyLimitError,
     InsufficientCreditsError,
     SubscriptionExpiredError,
-    ValidationError
+    ValidationError,
+    ServerError,
+    ProUltraUnavailableError,
+    OutputBudgetExhaustedError,
+    QuestionErrorCode,
 )
 
 from ._version import __version__
@@ -95,6 +100,9 @@ __all__ = [
     "HealthResult",
     "CareerResult",
     "normalize_western_relationship",
+    # Room scan
+    "upload_room_capture",
+    "merge_room_captures",
     # Exceptions
     "VedikaAPIError",
     "AuthenticationError",
@@ -103,6 +111,10 @@ __all__ = [
     "InsufficientCreditsError",
     "SubscriptionExpiredError",
     "ValidationError",
+    "ServerError",
+    "ProUltraUnavailableError",
+    "OutputBudgetExhaustedError",
+    "QuestionErrorCode",
 ]
 
 from .client import (

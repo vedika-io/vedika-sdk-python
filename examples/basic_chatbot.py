@@ -2,10 +2,10 @@
 """
 Basic AI Astrology Chatbot Example
 
-This example demonstrates how to use Vedika's unique AI-powered chatbot
+This example demonstrates how to use Vedika's AI-powered chatbot
 to ask conversational astrology questions.
 
-UNIQUE FEATURE: Only Vedika offers AI chatbot queries for astrology!
+Conversational astrology queries with structured birth details.
 """
 
 import os
@@ -70,7 +70,7 @@ def main():
 
         try:
             print(f"\n🤔 Asking: {question}")
-            print("⏳ Processing (this may take 20-40 seconds)...\n")
+            print("⏳ Processing your request...\n")
 
             # Ask the question
             response = client.ask_question(

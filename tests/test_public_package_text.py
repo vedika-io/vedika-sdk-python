@@ -4,6 +4,7 @@ These files ship: the sdist carries the docs, examples and tests, the wheel
 carries the `vedika` package, and the README becomes the PyPI description.
 """
 
+import ast
 import re
 from pathlib import Path
 
@@ -23,6 +24,7 @@ def shipped_text_files():
     files = [PACKAGE_ROOT / name for name in ("README.md", "CHANGELOG.md", "SECURITY.md", "CONTRIBUTING.md", "setup.py")]
     for folder, pattern in (("vedika", "*.py"), ("examples", "*"), ("tests", "*.py")):
         files.extend(path for path in sorted((PACKAGE_ROOT / folder).rglob(pattern)) if path.is_file())
+    files.extend(sorted((PACKAGE_ROOT / "tests" / "fixtures" / "reference").rglob("*.json")))
     return files
 
 
@@ -92,3 +94,67 @@ def test_shipped_text_describes_no_internal_architecture():
     # And they leave ordinary product copy alone.
     assert not ARCHITECTURE.search("Multi-Turn Conversations (maintain context via conversation_id)")
     assert not INTERNAL_VERSION.search("Supported since v3 of the API")
+
+
+# Rule 11 covers the stack too: the language and cloud the API runs on and the
+# model vendors behind it are never named. "Rust" shipped in docstrings,
+# comments and the changelog from 3.0.6 to 3.1.2.
+STACK = re.compile(
+    r"\b(?:rust|aws|amazon web services|bedrock|cerebras|openai|anthropic|claude|minimax|prokerala)\b"
+    r"|\bTS\s*(?:->|→)",
+    re.IGNORECASE,
+)
+
+
+def test_shipped_text_names_no_stack_or_vendor():
+    offenders = []
+    for path in shipped_text_files():
+        if path.resolve() == Path(__file__).resolve():
+            continue  # this file names the patterns it forbids
+        for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+            if STACK.search(line):
+                offenders.append(f"{path.relative_to(PACKAGE_ROOT)}:{number}: {line.strip()[:120]}")
+    assert offenders == []
+    # Known-positive controls: the exact shapes that shipped before.
+    assert STACK.search("match recorded Rust fixtures, including versioned scoring")
+    assert STACK.search("TS->Rust transition tolerance (3.0.6)")
+    assert STACK.search("single region (AWS `ap-south-1`, Mumbai)")
+    # And it leaves ordinary words alone.
+    assert not STACK.search("Trust the signed receipt; rusted plots and claudication")
+
+
+def test_public_capabilities_do_not_make_unsupported_exclusivity_claims():
+    unsupported = re.compile(
+        r"\bonly\s+b2b\b|\bonly vedika offers\b|\bno other (?:api|provider)\b"
+        r"|\bunique to vedika\b|\bonly conversational ai\b", re.IGNORECASE
+    )
+    files = [p for p in shipped_text_files() if p.name != "CHANGELOG.md" and "tests" not in p.relative_to(PACKAGE_ROOT).parts]
+    offenders = [str(p.relative_to(PACKAGE_ROOT)) for p in files
+                 if unsupported.search(p.read_text(encoding="utf-8").replace("**", ""))]
+    assert offenders == []
+    assert unsupported.search("The only B2B astrology API")
+    assert not unsupported.search("Conversational readings and chart calculations")
+
+
+def test_distribution_and_runtime_versions_match():
+    from vedika import __version__
+
+    source = ast.parse((PACKAGE_ROOT / "setup.py").read_text(encoding="utf-8"))
+    setup = next(node for node in ast.walk(source)
+                 if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "setup")
+    version = next(keyword.value for keyword in setup.keywords if keyword.arg == "version")
+    assert ast.literal_eval(version) == __version__
+
+
+def test_customer_guidance_does_not_promise_numerical_response_time_ranges():
+    latency_range = re.compile(
+        r"\b\d+(?:\.\d+)?\s*[-–]\s*\d+(?:\.\d+)?\s*(?:s\b|seconds?\b)"
+        r"|\b(?:average|typical)\s+response\s+time[^\n]*\d+(?:\.\d+)?\s*(?:s\b|seconds?\b)", re.IGNORECASE
+    )
+    files = [p for p in shipped_text_files() if p.name != "CHANGELOG.md" and "tests" not in p.relative_to(PACKAGE_ROOT).parts]
+    assert [str(p.relative_to(PACKAGE_ROOT)) for p in files
+            if latency_range.search(p.read_text(encoding="utf-8"))] == []
+    assert latency_range.search("Fast mode: 1.5-3 seconds")
+    assert latency_range.search("Standard: 12–18s")
+    assert latency_range.search("Average response time: 2.14 seconds")
+    assert not latency_range.search("timeout: 60; response time varies by route")

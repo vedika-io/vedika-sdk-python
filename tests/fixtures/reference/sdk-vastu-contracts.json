@@ -1,0 +1,92 @@
+{
+  "entries": [
+    {
+      "label": "rules_versions_get_no_body",
+      "operation": "rules/versions",
+      "method": "GET",
+      "call": {
+        "method_name": "vastu_rule_versions",
+        "kwargs": {}
+      },
+      "expected_path": "/v2/astrology/vastu/rules/versions",
+      "expected_idempotency_key": null
+    },
+    {
+      "label": "compare_versions_post_with_idempotency",
+      "operation": "plan/compare-versions",
+      "method": "POST",
+      "call": {
+        "method_name": "vastu_compare_versions",
+        "kwargs": {
+          "params": {
+            "fromVersion": "vastu-rules-2026-10-04",
+            "toVersion": "vastu-rules-2026-10-18"
+          },
+          "idempotency_key": "comparison-retry"
+        }
+      },
+      "expected_path": "/v2/astrology/vastu/plan/compare-versions",
+      "expected_idempotency_key": "comparison-retry"
+    },
+    {
+      "label": "reference_directions_8_get",
+      "operation": "reference/directions/8",
+      "method": "GET",
+      "call": {
+        "method_name": "vastu_reference",
+        "kwargs": {
+          "table": "reference/directions/8"
+        }
+      },
+      "expected_path": "/v2/astrology/vastu/reference/directions/8",
+      "expected_idempotency_key": null
+    },
+    {
+      "label": "reference_mandala_9_zone_get",
+      "operation": "reference/mandala/9-zone",
+      "method": "GET",
+      "call": {
+        "method_name": "vastu_reference",
+        "kwargs": {
+          "table": "reference/mandala/9-zone"
+        }
+      },
+      "expected_path": "/v2/astrology/vastu/reference/mandala/9-zone",
+      "expected_idempotency_key": null
+    },
+    {
+      "label": "mandala_project_81_pada_post",
+      "operation": "mandala/project/81-pada",
+      "method": "POST",
+      "call": {
+        "method_name": "vastu_mandala_project",
+        "kwargs": {
+          "scheme": "81-pada",
+          "params": {
+            "plotPolygon": []
+          }
+        }
+      },
+      "expected_path": "/v2/astrology/vastu/mandala/project/81-pada",
+      "expected_idempotency_key": null
+    },
+    {
+      "label": "receipt_verify_post_no_idempotency",
+      "operation": "receipt/verify",
+      "method": "POST",
+      "call": {
+        "method_name": "vastu_verify_receipt",
+        "kwargs": {
+          "params": {
+            "token": "test.receipt.signature",
+            "input": {
+              "rooms": []
+            }
+          }
+        }
+      },
+      "expected_path": "/v2/astrology/vastu/receipt/verify",
+      "expected_idempotency_key": null
+    }
+  ]
+}

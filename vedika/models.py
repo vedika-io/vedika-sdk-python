@@ -122,6 +122,12 @@ class Citation:
         )
 
 
+def _metadata_value(metadata: Dict[str, Any], key: str, kind: type) -> Any:
+    """``metadata[key]`` when it has the expected JSON type, else None."""
+    value = metadata.get(key)
+    return value if isinstance(value, kind) else None
+
+
 @dataclass
 class QuestionResponse:
     """
@@ -136,6 +142,24 @@ class QuestionResponse:
         sources: Astrological factors considered
         citations: Classical-source citations when returned
         structured_response: Parsed sections when response_format='json'
+        finish_reason: How the answer ended, from ``metadata.finishReason``:
+            "complete", "length" (reached the output limit), "budgetExceeded"
+            (found to end mid-sentence), "stopSequence" (a ``stop`` match,
+            reported by Vedika Pro Ultra; the other speeds read "complete"),
+            "filtered" or "unknown" (no completion signal; do not treat it as
+            complete). Set on every answer, whatever you sent; None only when
+            the response carries no metadata.
+        truncated: True when the answer reached its output limit or was found
+            incomplete, False when it finished; None only when the response
+            carries no metadata. A truncated answer may be cut off.
+        degraded: True only on a reduced answer; None on a normal one.
+        degraded_reason: Why it is reduced: "budget_truncated" (the answer
+            reached its output limit, or the limit was used up before any text
+            was written; a chart-only answer is returned then), or
+            "upstream_unavailable" / "upstream_timeout" (built from your computed
+            chart alone). Set exactly when ``degraded`` is. A "budget_truncated"
+            answer is not charged: ask again with a higher ``max_tokens`` or
+            ``detail="brief"``.
     """
     answer: str
     confidence: float
@@ -158,6 +182,13 @@ class QuestionResponse:
     # row ids, cited rows, and whether the report was reused from the
     # conversation. The report is caller-supplied and never verified.
     vastu_context: Optional[Dict[str, Any]] = None
+    # Completion and degradation signals, read from `metadata`. None when the
+    # response does not carry them: finish_reason and truncated are on every
+    # answer, the degraded fields only on a reduced one.
+    finish_reason: Optional[str] = None
+    truncated: Optional[bool] = None
+    degraded: Optional[bool] = None
+    degraded_reason: Optional[str] = None
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'QuestionResponse':
@@ -198,6 +229,10 @@ class QuestionResponse:
             conversation_id=data.get("conversationId") or data.get("conversation_id"),
             raw=data,
             vastu_context=data.get("vastuContext") if isinstance(data.get("vastuContext"), dict) else None,
+            finish_reason=_metadata_value(metadata, "finishReason", str),
+            truncated=_metadata_value(metadata, "truncated", bool),
+            degraded=_metadata_value(metadata, "degraded", bool),
+            degraded_reason=_metadata_value(metadata, "degradedReason", str),
         )
 
 
@@ -593,7 +628,8 @@ class VoiceResponse:
 
     Types the response from ``/api/v1/voice``.
 
-    The server returns binary ``audio/mpeg`` with metadata in the
+    The server returns binary audio (``audio/wav``, or ``audio/mpeg`` when the
+    backup voice answered) with metadata in the
     ``X-Vedika-Voice-Meta`` base64-JSON header. When TTS fails, it falls back
     to a JSON body with ``audio=None`` and the text answer in ``response``.
 
@@ -603,7 +639,7 @@ class VoiceResponse:
     header.
 
     Attributes:
-        audio: Raw audio bytes (``audio/mpeg``) or None on TTS fallback
+        audio: Raw audio bytes (WAV normally, MP3 from the backup voice) or None on TTS fallback
         response_text: AI-generated text answer (always present)
         language: Detected/output language (ISO 639-1)
         tier: Public voice-tier label
@@ -941,10 +977,10 @@ class HDType:
 class MatchResult:
     """Matrimony unified match result.
 
-    ``raw`` holds the full original payload so no engine-specific field is ever
-    lost to the typed-model shape — important across the TS->Rust transition,
-    where the matchmaking TOTAL may differ by engine (value divergence) while
-    ``kootas`` / ``dosha_analysis`` stay passthrough dicts that parse from either.
+    ``raw`` holds the full original payload so no version-specific field is ever
+    lost to the typed-model shape — important across server versions,
+    where the matchmaking TOTAL may differ (value divergence) while
+    ``kootas`` / ``dosha_analysis`` stay passthrough dicts that parse from any.
     """
     total_score: int = 0
     max_score: int = 36
@@ -1097,8 +1133,8 @@ class DailyBundle:
 @dataclass
 class AllDashaResult:
     """All dasha systems current periods. Every system block beyond
-    ``vimshottari`` is optional, so a response that omits a system (engine-
-    specific across the TS->Rust transition) parses cleanly."""
+    ``vimshottari`` is optional, so a response that omits a system (version-
+    specific across server versions) parses cleanly."""
     vimshottari: Dict[str, Any] = field(default_factory=dict)
     ashtottari: Optional[Dict[str, Any]] = None
     chara: Optional[Dict[str, Any]] = None
@@ -1161,17 +1197,17 @@ class CareerResult:
 
 
 # ═══════════════════════════════════════════
-# TS->Rust Transition-Tolerant Helpers (SDK 3.0.6)
+# Server-Version-Tolerant Helpers (SDK 3.0.6)
 # ═══════════════════════════════════════════
 #
-# The TS->Rust cutover aligns Rust v2 responses to the live TS contract, so most
-# families parse unchanged from either engine (the ``.get(default)`` parsing in
+# Supported server versions share the v2 contract, so most
+# families parse unchanged from any of them (the ``.get(default)`` parsing in
 # the models above is already shape-tolerant). A few families have a KNOWN
 # transition divergence between supported server versions:
-#   - western synastry/composite: the Rust engine may OMIT the ``interpretation``,
+#   - western synastry/composite: a server version may OMIT the ``interpretation``,
 #     ``orbQuality`` / ``orb_quality`` and ``signifies`` prose blocks while the
 #     computed geometry (planets, aspects, orbs) stays parity-exact.
-#   - matchmaking scoring: total may differ by engine (value, not shape).
+#   - matchmaking scoring: total may differ by version (value, not shape).
 # Western relationship results are returned as raw dicts (untyped), which is
 # already tolerant; this helper additionally GUARANTEES the divergent keys exist
 # (defaulted) so downstream code that reads ``["interpretation"]`` never raises a
