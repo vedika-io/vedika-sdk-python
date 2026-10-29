@@ -52,9 +52,12 @@ from .exceptions import (
     DailyLimitError,
     InsufficientCreditsError,
     SubscriptionExpiredError,
-    ValidationError
+    ValidationError,
+    ProUltraUnavailableError,
+    OutputBudgetExhaustedError,
+    QuestionErrorCode,
 )
-from ._idempotency import certified_header
+from ._idempotency import certified_headers
 from ._version import __version__
 
 
@@ -2160,6 +2163,10 @@ class VastuArRoomCaptureDataCompleteness(TypedDict):
     missing: List[str]
     warnings: List[str]
 
+class VastuArRoomCaptureDataAuditStatus(TypedDict):
+    status: Literal["accepted", "provisional"]
+    reasons: List[str]
+
 class VastuArScanQualityDataRoomCoverage(TypedDict):
     expectedRoomCount: Optional[int]
     percent: Optional[float]
@@ -2218,6 +2225,7 @@ class _VastuArchiveDeleteDataErasureReceiptOptional(TypedDict, total=False):
     linkedScanIds: List[str]
     linkedAssessmentIds: List[str]
     revisionId: str
+    receiptId: str
 
 class VastuArchiveDeleteDataErasureReceipt(_VastuArchiveDeleteDataErasureReceiptOptional):
     schemaVersion: Literal[1]
@@ -2295,6 +2303,7 @@ class _VastuAssessmentBatchDataResultsItemResponseDataOptional(TypedDict, total=
     reScanSuggestions: List[str]
     charged: bool
     listingId: VastuJsonValue
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuAssessmentBatchDataResultsItemResponseData(_VastuAssessmentBatchDataResultsItemResponseDataOptional):
     system: Literal["vastu"]
@@ -2989,6 +2998,35 @@ class VastuPlanAuditDataReceipt(TypedDict):
     verifyUrl: str
     keyUrl: str
 
+class VastuPlanExportIfcDataStoreysItem(TypedDict):
+    level: int
+    name: str
+    elevationM: float
+    roomCount: int
+
+class _VastuPlanGenerateDataFloorsItemOptional(TypedDict, total=False):
+    note: str
+    compliance: Dict[str, VastuJsonValue]
+    placedArea: float
+    utilisationPct: Optional[float]
+    svg: str
+
+class VastuPlanGenerateDataFloorsItem(_VastuPlanGenerateDataFloorsItemOptional):
+    level: int
+    label: str
+    rooms: List[str]
+    roomCount: int
+    openTerrace: bool
+
+class _VastuPlanGenerateDataWarningsItemOptional(TypedDict, total=False):
+    floor: int
+    label: str
+
+class VastuPlanGenerateDataWarningsItem(_VastuPlanGenerateDataWarningsItemOptional):
+    code: Literal["storey-open-terrace", "storey-bedroom-without-toilet", "storeys-not-connected"]
+    field: str
+    message: str
+
 class _VastuPlanGenerateDataPlotRegionGeometryOptional(TypedDict, total=False):
     polygon: VastuJsonValue
     holes: List[VastuJsonValue]
@@ -3120,6 +3158,8 @@ class VastuPlanImportDataPricing(TypedDict):
 class _VastuPlanImportDxfDataPlanPlotOptional(TypedDict, total=False):
     polygon: List[List[float]]
     units: str
+    facing: str
+    area: float
 
 class VastuPlanImportDxfDataPlanPlot(_VastuPlanImportDxfDataPlanPlotOptional):
     width: float
@@ -3173,6 +3213,8 @@ class _VastuPlanImportDxfDataPlanOptional(TypedDict, total=False):
     openings: VastuPlanImportDxfDataPlanOpenings
     orientationDeg: float
     cadMetadata: Dict[str, VastuJsonValue]
+    canonicalUnits: Literal["m"]
+    sourceInputUnits: str
 
 class VastuPlanImportDxfDataPlan(_VastuPlanImportDxfDataPlanOptional):
     plot: VastuPlanImportDxfDataPlanPlot
@@ -3263,6 +3305,8 @@ class _VastuPlanImportIfcDataStoreysItemPlanOptional(TypedDict, total=False):
     openings: VastuPlanImportIfcDataStoreysItemPlanOpenings
     orientationDeg: float
     cadMetadata: Dict[str, VastuJsonValue]
+    canonicalUnits: Literal["m"]
+    sourceInputUnits: str
 
 class VastuPlanImportIfcDataStoreysItemPlan(_VastuPlanImportIfcDataStoreysItemPlanOptional):
     plot: VastuPlanImportIfcDataStoreysItemPlanPlot
@@ -3577,6 +3621,7 @@ class _VastuPropertiesDeleteDataErasureReceiptOptional(TypedDict, total=False):
     linkedScanIds: List[str]
     linkedAssessmentIds: List[str]
     revisionId: str
+    receiptId: str
 
 class VastuPropertiesDeleteDataErasureReceipt(_VastuPropertiesDeleteDataErasureReceiptOptional):
     schemaVersion: Literal[1]
@@ -3761,6 +3806,30 @@ class VastuRemedyComparisonDataNotAssessedItem(TypedDict):
     reason: Literal["no placement rule for this space type"]
     graded: Literal[False]
 
+class VastuScanStoredDataAuditStatus(TypedDict):
+    status: Literal["accepted", "provisional"]
+    reasons: List[str]
+
+class VastuScansDeleteDataDeletionReceiptRemovedItem(TypedDict):
+    kind: str
+    artifactId: str
+
+class _VastuScansDeleteDataDeletionReceiptOptional(TypedDict, total=False):
+    scopeNote: str
+
+class VastuScansDeleteDataDeletionReceipt(_VastuScansDeleteDataDeletionReceiptOptional):
+    schemaVersion: Literal[1]
+    kind: Literal["scan-deletion"]
+    scanId: str
+    scope: Literal["saved-scan-record"]
+    removed: List[VastuScansDeleteDataDeletionReceiptRemovedItem]
+    deletedByAccountHash: str
+    deletedAtEpoch: int
+    deletedAt: str
+    hashAlgorithm: Literal["SHA-256"]
+    receiptId: str
+    receiptHash: str
+
 class _VastuSpecializedAuditDataFindingsItemOptional(TypedDict, total=False):
     room: str
     zone: str
@@ -3896,7 +3965,7 @@ class VastuZoneWiseScoreDataReceipt(TypedDict):
     keyUrl: str
 
 class _VastuArAnchorRecommendationsDataOptional(TypedDict, total=False):
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuArAnchorRecommendationsData(_VastuArAnchorRecommendationsDataOptional):
     anchors: List[VastuArAnchorRecommendationsDataAnchorsItem]
@@ -3915,7 +3984,7 @@ class VastuArAnchorRecommendationsData(_VastuArAnchorRecommendationsDataOptional
     omissionNote: str
 
 class _VastuArAttestationChallengeDataOptional(TypedDict, total=False):
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuArAttestationChallengeData(_VastuArAttestationChallengeDataOptional):
     challenge: Optional[str]
@@ -3926,7 +3995,7 @@ class VastuArAttestationChallengeData(_VastuArAttestationChallengeDataOptional):
 
 class _VastuArCaptureMergeDataOptional(TypedDict, total=False):
     pricing: VastuArCaptureMergeDataPricing
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuArCaptureMergeData(_VastuArCaptureMergeDataOptional):
     method: Literal["capture-merge"]
@@ -3941,7 +4010,7 @@ class VastuArCaptureMergeData(_VastuArCaptureMergeDataOptional):
     alignmentMethod: str
 
 class _VastuArDeityIconsDataOptional(TypedDict, total=False):
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuArDeityIconsData(_VastuArDeityIconsDataOptional):
     icons: List[VastuArDeityIconsDataIconsItem]
@@ -3949,7 +4018,7 @@ class VastuArDeityIconsData(_VastuArDeityIconsDataOptional):
     provenance: VastuJsonValue
 
 class _VastuArHeatmapRasterDataOptional(TypedDict, total=False):
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuArHeatmapRasterData(_VastuArHeatmapRasterDataOptional):
     mask: int
@@ -3970,7 +4039,8 @@ class VastuArHeatmapRasterData(_VastuArHeatmapRasterDataOptional):
 
 class _VastuArRoomCaptureDataOptional(TypedDict, total=False):
     uncertainty: VastuMeasurementUncertainty
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
+    auditStatus: VastuArRoomCaptureDataAuditStatus
 
 class VastuArRoomCaptureData(_VastuArRoomCaptureDataOptional):
     method: Literal["room-capture"]
@@ -3993,8 +4063,10 @@ class VastuArRoomCaptureData(_VastuArRoomCaptureDataOptional):
 class _VastuArScanQualityDataOptional(TypedDict, total=False):
     deviceAttestation: VastuJsonValue
     deviceAttested: Literal[True]
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
     receipt: VastuArScanQualityDataReceipt
+    gradeStatus: Literal["computed", "accepted", "provisional"]
+    gradeReasons: List[str]
 
 class VastuArScanQualityData(_VastuArScanQualityDataOptional):
     grade: Optional[Literal["A", "B", "C", "D", "F"]]
@@ -4016,7 +4088,7 @@ class VastuArScanQualityData(_VastuArScanQualityDataOptional):
     limitations: str
 
 class _VastuArTrueNorthDataOptional(TypedDict, total=False):
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuArTrueNorthData(_VastuArTrueNorthDataOptional):
     input: VastuArTrueNorthResultInput
@@ -4032,7 +4104,7 @@ class VastuArTrueNorthData(_VastuArTrueNorthDataOptional):
     headingQuality: VastuArTrueNorthDataHeadingQuality
 
 class _VastuArYantraMeshesDataOptional(TypedDict, total=False):
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuArYantraMeshesData(_VastuArYantraMeshesDataOptional):
     name: str
@@ -4047,7 +4119,7 @@ class VastuArYantraMeshesData(_VastuArYantraMeshesDataOptional):
     assetId: Literal["nine-zone-mandala"]
 
 class _VastuArZoneTexturesDataOptional(TypedDict, total=False):
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuArZoneTexturesData(_VastuArZoneTexturesDataOptional):
     png: VastuJsonValue
@@ -4062,12 +4134,15 @@ class VastuArZoneTexturesData(_VastuArZoneTexturesDataOptional):
     usdUvOrigin: str
 
 class _VastuArchiveDeleteDataOptional(TypedDict, total=False):
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
     erasureStatus: Literal["pending", "completed"]
     erasureReceipt: VastuArchiveDeleteDataErasureReceipt
     retryAfterEpoch: int
     revisionId: str
     replayed: bool
+    receiptId: str
+    receiptStatus: Literal["pending", "completed"]
+    readReceipt: str
 
 class VastuArchiveDeleteData(_VastuArchiveDeleteDataOptional):
     propertyId: str
@@ -4077,7 +4152,7 @@ class VastuArchiveDeleteData(_VastuArchiveDeleteDataOptional):
     linkedAssessmentIds: List[str]
 
 class _VastuArchiveExportDataOptional(TypedDict, total=False):
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuArchiveExportData(_VastuArchiveExportDataOptional):
     propertyId: str
@@ -4089,7 +4164,7 @@ class VastuArchiveExportData(_VastuArchiveExportDataOptional):
     linkedAssessmentIds: List[str]
 
 class _VastuArchiveSummaryDataOptional(TypedDict, total=False):
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuArchiveSummaryData(_VastuArchiveSummaryDataOptional):
     propertyId: str
@@ -4117,14 +4192,14 @@ class _VastuArchiveTierDataOptional(TypedDict, total=False):
     meterCents: int
     actionCents: int
     totalCents: int
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuArchiveTierData(_VastuArchiveTierDataOptional):
     propertyId: str
 
 class _VastuAssessmentBatchDataOptional(TypedDict, total=False):
     uncertainty: VastuMeasurementUncertainty
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuAssessmentBatchData(_VastuAssessmentBatchDataOptional):
     results: List[VastuAssessmentBatchDataResultsItem]
@@ -4155,7 +4230,7 @@ class _VastuAssessmentDataOptional(TypedDict, total=False):
     warnings: List[Dict[str, VastuJsonValue]]
     zoneCheck: Dict[str, VastuJsonValue]
     uncertainty: VastuMeasurementUncertainty
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
     receipt: VastuAssessmentDataReceipt
 
 class VastuAssessmentData(_VastuAssessmentDataOptional):
@@ -4174,7 +4249,7 @@ class _VastuAuspiciousFacingDataOptional(TypedDict, total=False):
     rationale: str
     system: str
     tradition: str
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuAuspiciousFacingData(_VastuAuspiciousFacingDataOptional):
     purpose: str
@@ -4192,7 +4267,7 @@ class _VastuBearingZoneDataOptional(TypedDict, total=False):
     elementSource: str
     verseBackedRooms: List[str]
     roomRulesClassification: str
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuBearingZoneData(_VastuBearingZoneDataOptional):
     bearingDeg: float
@@ -4218,7 +4293,7 @@ class _VastuBrahmasthanProjectionDataOptional(TypedDict, total=False):
     inPlotArea: float
     inPlotFraction: float
     shareOfPlotArea: Optional[float]
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuBrahmasthanProjectionData(_VastuBrahmasthanProjectionDataOptional):
     centerPolygon: List[List[float]]
@@ -4245,7 +4320,7 @@ class _VastuCatalogReferenceDataOptional(TypedDict, total=False):
     note: str
     meta: Dict[str, VastuJsonValue]
     zoneRemedies: List[VastuCatalogReferenceDataZoneRemediesItem]
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuCatalogReferenceData(_VastuCatalogReferenceDataOptional):
     verified: bool
@@ -4256,7 +4331,7 @@ class _VastuChatUploadDataOptional(TypedDict, total=False):
     textTruncated: bool
     replayed: bool
     billing: VastuChatUploadDataBilling
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuChatUploadData(_VastuChatUploadDataOptional):
     success: Literal[True]
@@ -4268,7 +4343,7 @@ class VastuChatUploadData(_VastuChatUploadDataOptional):
     fileSha256: str
 
 class _VastuCompareVersionsDataOptional(TypedDict, total=False):
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuCompareVersionsData(_VastuCompareVersionsDataOptional):
     inputHash: str
@@ -4279,7 +4354,7 @@ class VastuCompareVersionsData(_VastuCompareVersionsDataOptional):
     toAssessment: Dict[str, VastuJsonValue]
     changed: bool
     changes: List[VastuCompareVersionsDataChangesItem]
-    retainedVersions: Literal[2]
+    retainedVersions: Literal[4]
     scope: str
 
 class _VastuComplianceIndexDataOptional(TypedDict, total=False):
@@ -4297,7 +4372,7 @@ class _VastuComplianceIndexDataOptional(TypedDict, total=False):
     verdict: Optional[str]
     notAssessed: List[VastuComplianceIndexDataNotAssessedItem]
     scoreNote: str
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
     receipt: VastuComplianceIndexDataReceipt
 
 class VastuComplianceIndexData(_VastuComplianceIndexDataOptional):
@@ -4315,8 +4390,10 @@ class _VastuDetailedFloorPlanAuditDataOptional(TypedDict, total=False):
     scoreNote: str
     merchantCatalogId: str
     merchantCatalogRevision: int
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
     receipt: VastuDetailedFloorPlanAuditDataReceipt
+    gradeStatus: Literal["computed", "accepted", "provisional"]
+    gradeReasons: List[str]
 
 class VastuDetailedFloorPlanAuditData(_VastuDetailedFloorPlanAuditDataOptional):
     score: Optional[float]
@@ -4338,7 +4415,7 @@ class _VastuDirectionCorrectDataOptional(TypedDict, total=False):
     correctedZoneIsMagnetic: bool
     declinationCoverage: str
     uncertainty: VastuMeasurementUncertainty
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuDirectionCorrectData(_VastuDirectionCorrectDataOptional):
     input: Dict[str, VastuJsonValue]
@@ -4352,7 +4429,7 @@ class VastuDirectionCorrectData(_VastuDirectionCorrectDataOptional):
 class _VastuDirectionDeclinationDataOptional(TypedDict, total=False):
     declinationCoverage: str
     uncertainty: VastuMeasurementUncertainty
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuDirectionDeclinationData(_VastuDirectionDeclinationDataOptional):
     lat: float
@@ -4377,7 +4454,7 @@ class _VastuDirections32ReferenceDataOptional(TypedDict, total=False):
     tradition: str
     meta: Dict[str, VastuJsonValue]
     uncertainty: VastuMeasurementUncertainty
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuDirections32ReferenceData(_VastuDirections32ReferenceDataOptional):
     padaCount: int
@@ -4394,7 +4471,7 @@ class _VastuDirectionsReferenceDataOptional(TypedDict, total=False):
     meta: Dict[str, VastuJsonValue]
     tradition: str
     uncertainty: VastuMeasurementUncertainty
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuDirectionsReferenceData(_VastuDirectionsReferenceDataOptional):
     directionCount: int
@@ -4427,7 +4504,7 @@ class _VastuElementBalanceDataOptional(TypedDict, total=False):
     method: str
     summary: str
     system: str
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuElementBalanceData(_VastuElementBalanceDataOptional):
     derivedFrom: str
@@ -4442,7 +4519,7 @@ class _VastuElementDistributionDataOptional(TypedDict, total=False):
     system: str
     totalRooms: float
     weightingBasis: str
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuElementDistributionData(_VastuElementDistributionDataOptional):
     elementDistribution: List[Dict[str, VastuJsonValue]]
@@ -4454,7 +4531,7 @@ class VastuElementDistributionData(_VastuElementDistributionDataOptional):
 
 class _VastuEntrancePadaDataOptional(TypedDict, total=False):
     uncertainty: VastuMeasurementUncertainty
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuEntrancePadaData(_VastuEntrancePadaDataOptional):
     doorXY: List[float]
@@ -4476,7 +4553,7 @@ class _VastuEntranceRecommendDataOptional(TypedDict, total=False):
     prescribedRoomsAtFacing: List[str]
     system: str
     uncertainty: VastuMeasurementUncertainty
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuEntranceRecommendData(_VastuEntranceRecommendDataOptional):
     facing: Dict[str, VastuJsonValue]
@@ -4486,7 +4563,7 @@ class VastuEntranceRecommendData(_VastuEntranceRecommendDataOptional):
 
 class _VastuFeedListingsDataOptional(TypedDict, total=False):
     dryRun: bool
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuFeedListingsData(_VastuFeedListingsDataOptional):
     accepted: int
@@ -4501,7 +4578,7 @@ class _VastuFloorPlanAuditDataOptional(TypedDict, total=False):
     scoreNote: str
     merchantCatalogId: str
     merchantCatalogRevision: int
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
     receipt: VastuFloorPlanAuditDataReceipt
 
 class VastuFloorPlanAuditData(_VastuFloorPlanAuditDataOptional):
@@ -4523,7 +4600,7 @@ class _VastuFloorRulesDataOptional(TypedDict, total=False):
     principle: str
     system: str
     tradition: str
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuFloorRulesData(_VastuFloorRulesDataOptional):
     masterBedroomFloor: int
@@ -4537,7 +4614,7 @@ class _VastuFusionChartDataOptional(TypedDict, total=False):
     system: str
     tradition: str
     verified: bool
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuFusionChartData(_VastuFusionChartDataOptional):
     ascendant: Dict[str, VastuJsonValue]
@@ -4549,7 +4626,7 @@ class VastuFusionChartData(_VastuFusionChartDataOptional):
     sources: List[str]
 
 class _VastuJobResultsDataOptional(TypedDict, total=False):
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuJobResultsData(_VastuJobResultsDataOptional):
     jobId: str
@@ -4560,7 +4637,7 @@ class VastuJobResultsData(_VastuJobResultsDataOptional):
 class _VastuJobStatusDataOptional(TypedDict, total=False):
     webhookId: Optional[str]
     finishedAt: Optional[int]
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuJobStatusData(_VastuJobStatusDataOptional):
     jobId: str
@@ -4578,7 +4655,7 @@ class VastuJobStatusData(_VastuJobStatusDataOptional):
 class _VastuJobSubmitDataOptional(TypedDict, total=False):
     preview: List[VastuJsonValue]
     previewNote: str
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuJobSubmitData(_VastuJobSubmitDataOptional):
     jobId: str
@@ -4595,7 +4672,7 @@ class _VastuLevelAnalysisDataOptional(TypedDict, total=False):
     principle: str
     system: str
     tradition: str
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuLevelAnalysisData(_VastuLevelAnalysisDataOptional):
     idealLevels: List[Dict[str, VastuJsonValue]]
@@ -4613,7 +4690,7 @@ class _VastuMainGateDataOptional(TypedDict, total=False):
     remedyType: str
     system: str
     verified: bool
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuMainGateData(_VastuMainGateDataOptional):
     facing: str
@@ -4631,7 +4708,7 @@ class _VastuMandalaProjectionDataOptional(TypedDict, total=False):
     computed: bool
     gridFrame: VastuMandalaProjectionDataGridFrame
     uncertainty: VastuMeasurementUncertainty
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuMandalaProjectionData(_VastuMandalaProjectionDataOptional):
     cells: List[Dict[str, VastuJsonValue]]
@@ -4662,7 +4739,7 @@ class _VastuMandalaReferenceDataOptional(TypedDict, total=False):
     plotCentroid: List[float]
     projected: bool
     tradition: str
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuMandalaReferenceData(_VastuMandalaReferenceDataOptional):
     verified: bool
@@ -4681,7 +4758,7 @@ class VastuMeasurementUncertainty(_VastuMeasurementUncertaintyOptional):
 class _VastuObstructionDataOptional(TypedDict, total=False):
     rangeClassification: str
     rangeSource: str
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuObstructionData(_VastuObstructionDataOptional):
     input: Dict[str, VastuJsonValue]
@@ -4713,7 +4790,7 @@ class _VastuOverallScoreDataOptional(TypedDict, total=False):
     verdict: Optional[str]
     notAssessed: List[VastuOverallScoreDataNotAssessedItem]
     scoreNote: str
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
     receipt: VastuOverallScoreDataReceipt
 
 class VastuOverallScoreData(_VastuOverallScoreDataOptional):
@@ -4730,7 +4807,7 @@ class _VastuPlacementDataOptional(TypedDict, total=False):
     elementSource: str
     tradition: str
     uncertainty: VastuMeasurementUncertainty
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuPlacementData(_VastuPlacementDataOptional):
     system: str
@@ -4765,11 +4842,15 @@ class _VastuPlanAuditDataOptional(TypedDict, total=False):
     uncertainty: VastuMeasurementUncertainty
     merchantCatalogId: str
     merchantCatalogRevision: int
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
     receipt: VastuPlanAuditDataReceipt
     units: str
     inputUnits: str
     metresPerInputUnit: float
+    gradeStatus: Literal["computed", "accepted", "provisional"]
+    gradeReasons: List[str]
+    directionalScoreStatus: Literal["computed", "needs_facing"]
+    directionalScoreMessage: str
 
 class VastuPlanAuditData(_VastuPlanAuditDataOptional):
     system: str
@@ -4803,10 +4884,11 @@ class VastuPlanConvertUnitsData(_VastuPlanConvertUnitsDataOptional):
 
 class _VastuPlanExportDxfDataOptional(TypedDict, total=False):
     pricing: Dict[str, VastuJsonValue]
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
     units: str
     inputUnits: str
     metresPerInputUnit: float
+    canonicalUnits: Literal["m"]
 
 class VastuPlanExportDxfData(_VastuPlanExportDxfDataOptional):
     dxf: str
@@ -4827,6 +4909,8 @@ class _VastuPlanExportIfcDataOptional(TypedDict, total=False):
     pricing: Dict[str, VastuJsonValue]
     inputUnits: str
     metresPerInputUnit: float
+    storeyCount: int
+    storeys: List[VastuPlanExportIfcDataStoreysItem]
 
 class VastuPlanExportIfcData(_VastuPlanExportIfcDataOptional):
     ifc: str
@@ -4851,14 +4935,15 @@ class _VastuPlanGenerateDataOptional(TypedDict, total=False):
     variantCount: float
     variantNote: str
     verified: bool
-    floors: List[Dict[str, VastuJsonValue]]
+    floors: List[VastuPlanGenerateDataFloorsItem]
     core: Dict[str, VastuJsonValue]
     verticalChecks: List[Dict[str, VastuJsonValue]]
     floorNote: str
+    warnings: List[VastuPlanGenerateDataWarningsItem]
     uncertainty: VastuMeasurementUncertainty
     merchantCatalogId: str
     merchantCatalogRevision: int
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
     units: str
     inputUnits: str
     metresPerInputUnit: float
@@ -4875,7 +4960,7 @@ class VastuPlanGenerateData(_VastuPlanGenerateDataOptional):
     recommendedVariant: str
 
 class _VastuPlanImportDataOptional(TypedDict, total=False):
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
     units: Literal["m", "drawing-units"]
     inputUnits: Literal["m", "ft", "mm", "in"]
     metresPerInputUnit: float
@@ -4894,10 +4979,11 @@ class VastuPlanImportData(_VastuPlanImportDataOptional):
 
 class _VastuPlanImportDxfDataOptional(TypedDict, total=False):
     pricing: Dict[str, VastuJsonValue]
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
     units: str
     inputUnits: str
     metresPerInputUnit: float
+    canonicalUnits: Literal["m"]
 
 class VastuPlanImportDxfData(_VastuPlanImportDxfDataOptional):
     plan: VastuPlanImportDxfDataPlan
@@ -4907,10 +4993,11 @@ class VastuPlanImportDxfData(_VastuPlanImportDxfDataOptional):
 
 class _VastuPlanImportIfcDataOptional(TypedDict, total=False):
     pricing: Dict[str, VastuJsonValue]
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
     units: str
     inputUnits: str
     metresPerInputUnit: float
+    canonicalUnits: Literal["m"]
 
 class VastuPlanImportIfcData(_VastuPlanImportIfcDataOptional):
     schema: str
@@ -4940,7 +5027,7 @@ class _VastuPlanOptimizeDataOptional(TypedDict, total=False):
     scoring: Dict[str, VastuJsonValue]
     merchantCatalogId: str
     merchantCatalogRevision: int
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
     units: str
     inputUnits: str
     metresPerInputUnit: float
@@ -4965,7 +5052,7 @@ class _VastuPlotExtensionsCutsDataOptional(TypedDict, total=False):
     system: str
     verdict: str
     uncertainty: VastuMeasurementUncertainty
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuPlotExtensionsCutsData(_VastuPlotExtensionsCutsDataOptional):
     directions: List[Dict[str, VastuJsonValue]]
@@ -4977,7 +5064,7 @@ class VastuPlotExtensionsCutsData(_VastuPlotExtensionsCutsDataOptional):
 
 class _VastuPlotFromSurveyDataOptional(TypedDict, total=False):
     pricing: VastuPlotFromSurveyDataPricing
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuPlotFromSurveyData(_VastuPlotFromSurveyDataOptional):
     method: Literal["plot-from-survey"]
@@ -5005,7 +5092,7 @@ class _VastuPlotOrientationDataOptional(TypedDict, total=False):
     provenance: Dict[str, VastuJsonValue]
     system: str
     uncertainty: VastuMeasurementUncertainty
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuPlotOrientationData(_VastuPlotOrientationDataOptional):
     facing: str
@@ -5019,7 +5106,7 @@ class _VastuPlotRatioDataOptional(TypedDict, total=False):
     fillRatio: float
     ratioScope: str
     uncertainty: VastuMeasurementUncertainty
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuPlotRatioData(_VastuPlotRatioDataOptional):
     length: float
@@ -5039,7 +5126,7 @@ class VastuPlotRatioData(_VastuPlotRatioDataOptional):
 
 class _VastuPlotShapeDataOptional(TypedDict, total=False):
     uncertainty: VastuMeasurementUncertainty
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuPlotShapeData(_VastuPlotShapeDataOptional):
     shape: str
@@ -5069,7 +5156,7 @@ class _VastuPlotSlopeDataOptional(TypedDict, total=False):
     remedyType: Optional[str]
     system: str
     uncertainty: VastuMeasurementUncertainty
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuPlotSlopeData(_VastuPlotSlopeDataOptional):
     downSlopeDirection: str
@@ -5152,7 +5239,7 @@ class VastuPropertiesCollaborationUpdateData(TypedDict):
     property: VastuPropertiesCollaborationUpdateDataProperty
 
 class _VastuPropertiesCreateDataOptional(TypedDict, total=False):
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuPropertiesCreateData(_VastuPropertiesCreateDataOptional):
     propertyId: str
@@ -5171,7 +5258,7 @@ class VastuPropertiesCreateData(_VastuPropertiesCreateDataOptional):
     contentHash: str
 
 class _VastuPropertiesDeleteDataOptional(TypedDict, total=False):
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
     erasureStatus: Literal["pending", "completed"]
     erasureReceipt: VastuPropertiesDeleteDataErasureReceipt
     retryAfterEpoch: int
@@ -5180,13 +5267,16 @@ class _VastuPropertiesDeleteDataOptional(TypedDict, total=False):
     linkedAssessmentIds: List[str]
     revisionId: str
     replayed: bool
+    receiptId: str
+    receiptStatus: Literal["pending", "completed"]
+    readReceipt: str
 
 class VastuPropertiesDeleteData(_VastuPropertiesDeleteDataOptional):
     propertyId: str
     deleted: bool
 
 class _VastuPropertiesGetDataOptional(TypedDict, total=False):
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuPropertiesGetData(_VastuPropertiesGetDataOptional):
     propertyId: str
@@ -5205,7 +5295,7 @@ class VastuPropertiesGetData(_VastuPropertiesGetDataOptional):
     contentHash: str
 
 class _VastuPropertiesLinkScanDataOptional(TypedDict, total=False):
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuPropertiesLinkScanData(_VastuPropertiesLinkScanDataOptional):
     propertyId: str
@@ -5224,14 +5314,14 @@ class VastuPropertiesLinkScanData(_VastuPropertiesLinkScanDataOptional):
     contentHash: str
 
 class _VastuPropertiesListDataOptional(TypedDict, total=False):
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuPropertiesListData(_VastuPropertiesListDataOptional):
     properties: List[VastuPropertiesListDataPropertiesItem]
     nextCursor: Optional[str]
 
 class _VastuPropertiesUpdateDataOptional(TypedDict, total=False):
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuPropertiesUpdateData(_VastuPropertiesUpdateDataOptional):
     propertyId: str
@@ -5250,7 +5340,7 @@ class VastuPropertiesUpdateData(_VastuPropertiesUpdateDataOptional):
     contentHash: str
 
 class _VastuQuoteCalculateDataOptional(TypedDict, total=False):
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuQuoteCalculateData(_VastuQuoteCalculateDataOptional):
     workflowId: str
@@ -5261,7 +5351,7 @@ class VastuQuoteCalculateData(_VastuQuoteCalculateDataOptional):
     explanation: str
 
 class _VastuReceiptVerifyDataOptional(TypedDict, total=False):
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuReceiptVerifyData(_VastuReceiptVerifyDataOptional):
     valid: Literal[True]
@@ -5295,7 +5385,7 @@ class _VastuRemedyComparisonDataOptional(TypedDict, total=False):
     tradition: str
     verified: bool
     notAssessed: List[VastuRemedyComparisonDataNotAssessedItem]
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuRemedyComparisonData(_VastuRemedyComparisonDataOptional):
     before: VastuRemedyComparisonDataBefore
@@ -5317,7 +5407,7 @@ class _VastuRoadOrientationDataOptional(TypedDict, total=False):
     summary: str
     system: str
     verdict: str
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuRoadOrientationData(_VastuRoadOrientationDataOptional):
     roadAnalysis: List[Dict[str, VastuJsonValue]]
@@ -5337,7 +5427,7 @@ class _VastuRoomDataOptional(TypedDict, total=False):
     roomTypeNote: str
     merchantCatalogId: str
     merchantCatalogRevision: int
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuRoomData(_VastuRoomDataOptional):
     system: str
@@ -5358,7 +5448,7 @@ class VastuRoomData(_VastuRoomDataOptional):
     meta: Dict[str, VastuJsonValue]
 
 class _VastuRuleVersionsDataOptional(TypedDict, total=False):
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuRuleVersionsData(_VastuRuleVersionsDataOptional):
     currentVersion: str
@@ -5368,7 +5458,8 @@ class VastuRuleVersionsData(_VastuRuleVersionsDataOptional):
     scoringVersion: str
 
 class _VastuScanStoredDataOptional(TypedDict, total=False):
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
+    auditStatus: VastuScanStoredDataAuditStatus
 
 class VastuScanStoredData(_VastuScanStoredDataOptional):
     schemaVersion: Literal[1]
@@ -5382,7 +5473,12 @@ class VastuScanStoredData(_VastuScanStoredDataOptional):
 
 class _VastuScansDeleteDataOptional(TypedDict, total=False):
     previewNote: str
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
+    propertyId: Optional[str]
+    settlement: str
+    alreadyDeleted: bool
+    receiptId: str
+    deletionReceipt: VastuScansDeleteDataDeletionReceipt
 
 class VastuScansDeleteData(_VastuScansDeleteDataOptional):
     scanId: str
@@ -5393,7 +5489,7 @@ class VastuScansDeleteData(_VastuScansDeleteDataOptional):
 class _VastuScansListDataOptional(TypedDict, total=False):
     paginationNote: str
     previewNote: str
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuScansListData(_VastuScansListDataOptional):
     scans: List[VastuJsonValue]
@@ -5402,7 +5498,7 @@ class VastuScansListData(_VastuScansListDataOptional):
 
 class _VastuScansRetrieveDataOptional(TypedDict, total=False):
     previewNote: str
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuScansRetrieveData(_VastuScansRetrieveDataOptional):
     scan: VastuJsonValue
@@ -5412,7 +5508,7 @@ class _VastuScansSaveDataOptional(TypedDict, total=False):
     retentionNote: str
     previewNote: str
     deviceAttestation: VastuJsonValue
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuScansSaveData(_VastuScansSaveDataOptional):
     scan: VastuJsonValue
@@ -5421,7 +5517,7 @@ class VastuScansSaveData(_VastuScansSaveDataOptional):
 
 class _VastuScansTimelapseDataOptional(TypedDict, total=False):
     previewNote: str
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuScansTimelapseData(_VastuScansTimelapseDataOptional):
     propertyId: str
@@ -5437,7 +5533,7 @@ class _VastuSingleRoomAuditDataOptional(TypedDict, total=False):
     remedySource: Optional[str]
     merchantCatalogId: str
     merchantCatalogRevision: int
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuSingleRoomAuditData(_VastuSingleRoomAuditDataOptional):
     input: Dict[str, VastuJsonValue]
@@ -5455,7 +5551,7 @@ class _VastuSpecializedAuditDataOptional(TypedDict, total=False):
     notAssessed: List[VastuSpecializedAuditDataNotAssessedItem]
     scoreNote: str
     uncertainty: VastuMeasurementUncertainty
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
     receipt: VastuSpecializedAuditDataReceipt
 
 class VastuSpecializedAuditData(_VastuSpecializedAuditDataOptional):
@@ -5489,7 +5585,7 @@ class _VastuSunPathDataOptional(TypedDict, total=False):
     note: str
     noonUtc: str
     noonElevationDeg: float
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuSunPathData(_VastuSunPathDataOptional):
     input: VastuSunPathDataInput
@@ -5499,7 +5595,7 @@ class VastuSunPathData(_VastuSunPathDataOptional):
 
 class _VastuTimingDataOptional(TypedDict, total=False):
     foundationRite: Dict[str, VastuJsonValue]
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuTimingData(_VastuTimingDataOptional):
     system: str
@@ -5519,7 +5615,7 @@ class _VastuWallAnalysisDataOptional(TypedDict, total=False):
     principle: str
     system: str
     tradition: str
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuWallAnalysisData(_VastuWallAnalysisDataOptional):
     idealWalls: List[Dict[str, VastuJsonValue]]
@@ -5567,7 +5663,7 @@ class _VastuZoneReferenceDataOptional(TypedDict, total=False):
     note: str
     tradition: str
     meta: Dict[str, VastuJsonValue]
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
 
 class VastuZoneReferenceData(_VastuZoneReferenceDataOptional):
     zoneCount: int
@@ -5588,7 +5684,7 @@ class _VastuZoneWiseScoreDataOptional(TypedDict, total=False):
     zoneWeightingNote: str
     notAssessed: List[VastuZoneWiseScoreDataNotAssessedItem]
     scoreNote: str
-    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04"]
+    rulesVersion: Literal["vastu-rules-2026-09-23", "vastu-rules-2026-10-04", "vastu-rules-2026-10-18", "vastu-rules-2026-10-20"]
     receipt: VastuZoneWiseScoreDataReceipt
 
 class VastuZoneWiseScoreData(_VastuZoneWiseScoreDataOptional):
@@ -6267,6 +6363,29 @@ _VASTU_UPLOAD_KEY = re.compile(r"^[!-~]{1,256}$")
 _VASTU_JOB_PATH = re.compile(r"^jobs/([^/]+)(/results|/cancel)?$")
 
 
+def _generation_controls(speed=None, version=None, detail=None, max_tokens=None, stop=None, seed=None):
+    """The delivery-tier and answer-length fields of an AI question, as wire fields.
+
+    A field is included only when it is not None (``0`` is a valid ``seed``).
+    ``max_tokens`` goes out as ``maxTokens``. The API checks every value and
+    refuses an unsupported one before billing, so nothing is validated here.
+    """
+    fields: Dict[str, Any] = {}
+    if speed is not None:
+        fields["speed"] = speed
+    if version is not None:
+        fields["version"] = version
+    if detail is not None:
+        fields["detail"] = detail
+    if max_tokens is not None:
+        fields["maxTokens"] = max_tokens
+    if stop is not None:
+        fields["stop"] = stop if isinstance(stop, str) else list(stop)
+    if seed is not None:
+        fields["seed"] = seed
+    return fields
+
+
 def _vastu_job_id(job_id):
     if not isinstance(job_id, str) or not _VASTU_JOB_ID.match(job_id):
         raise ValueError("job_id must be the vjob_... id returned when the job was submitted")
@@ -6866,10 +6985,10 @@ def _v2_payload(result):
     typed models predate that. Callers attach the full payload to the returned
     model as `.raw` so no field is ever lost to a model-shape mismatch.
 
-    TS->Rust transition tolerance (3.0.6): recognise the envelope by the
-    load-bearing ``success`` + ``data`` (object) signature that BOTH engines
-    share, rather than blindly returning any top-level ``data`` key. The cutover
-    aligns Rust v2 responses to the live TS contract, but ``billing`` may be
+    Server-version tolerance (3.0.6): recognise the envelope by the
+    load-bearing ``success`` + ``data`` (object) signature that every server
+    version shares, rather than blindly returning any top-level ``data`` key.
+    Supported versions share the v2 contract, but ``billing`` may be
     absent (moved into ``meta`` or omitted on free/idempotent paths), so we do
     NOT require it. A bare reading payload that itself happens to carry a
     ``data`` field (without ``success: True``) is now left untouched, which
@@ -6951,7 +7070,11 @@ _RETRY_SAFE_METHODS = frozenset(["GET", "HEAD", "OPTIONS", "DELETE", "PUT"])
 _RETRYABLE_SERVER_STATUSES = frozenset([500, 502, 503, 504])
 # 429 codes that a short wait cannot fix: the allowance resets later, so a retry
 # only burns calls. Anything else on a 429 is treated as a per-minute limit.
-_NON_RETRYABLE_429_CODES = frozenset(["DAILY_LIMIT_EXCEEDED", "PLAN_LIMIT_EXCEEDED"])
+# MONTHLY_SPEND_LIMIT_REACHED clears only when the UTC month rolls over or the
+# account owner raises or removes the limit.
+_NON_RETRYABLE_429_CODES = frozenset(
+    ["DAILY_LIMIT_EXCEEDED", "PLAN_LIMIT_EXCEEDED", "MONTHLY_SPEND_LIMIT_REACHED"]
+)
 
 
 def _number(value):
@@ -7029,10 +7152,24 @@ def _raise_api_error(response, api_key):
     if status == 429:
         retry_after = _retry_after_seconds(response, body)
         if code in _NON_RETRYABLE_429_CODES:
-            raise DailyLimitError(message or "Daily call limit reached", code=code, retry_after=retry_after)
+            fallback = "Monthly spend limit reached" if code == "MONTHLY_SPEND_LIMIT_REACHED" else "Daily call limit reached"
+            raise DailyLimitError(message or fallback, code=code, retry_after=retry_after)
         raise RateLimitError(message or "Rate limit exceeded. Please wait a moment.", code=code, retry_after=retry_after)
     if status == 422:
         raise ValidationError(message or "Invalid input", code=code)
+    # Pro Ultra's two refusals get their own types. Both are answered before
+    # anything is billed, and neither is ever retried with other settings.
+    if status == 503 and code == QuestionErrorCode.PRO_ULTRA_UNAVAILABLE:
+        raise ProUltraUnavailableError(
+            message or "Vedika Pro Ultra is temporarily unavailable",
+            code=code,
+            retry_after=_retry_after_seconds(response, body),
+        )
+    if status == 400 and code == QuestionErrorCode.OUTPUT_BUDGET_EXHAUSTED:
+        raise OutputBudgetExhaustedError(
+            message or "The output budget for this request was used up before an answer was written",
+            code=code,
+        )
     raise VedikaAPIError(message or "API request failed", status_code=status, code=code)
 
 
@@ -7153,7 +7290,7 @@ class VedikaClient:
     """
     Main client for the Vedika Astrology API.
 
-    The ONLY B2B astrology API with AI-powered chatbot queries.
+    Astrology APIs with structured calculations and conversational readings.
 
     Args:
         api_key: Your Vedika API key (get one at https://vedika.io/dashboard.html)
@@ -7307,7 +7444,8 @@ class VedikaClient:
         when another limiter refused the call):
 
         * 401, 402, 4xx other than 429: never retried.
-        * 429 ``DAILY_LIMIT_EXCEEDED`` / ``PLAN_LIMIT_EXCEEDED``: never retried.
+        * 429 ``DAILY_LIMIT_EXCEEDED`` / ``PLAN_LIMIT_EXCEEDED`` /
+          ``MONTHLY_SPEND_LIMIT_REACHED``: never retried.
         * any other 429: refused before the call ran, so it is safe to resend.
           Waits the body ``retryAfter`` (or Retry-After), and gives up when
           that exceeds ``max_retry_wait``.
@@ -7366,7 +7504,7 @@ class VedikaClient:
         # the body (scanId or requestId); the server answers 422 to any retry
         # header, including one set on the session, so all three are removed.
         body_identity = _uses_body_identity(endpoint)
-        header_name = certified_header(method, path)
+        header_names = certified_headers(method, path)
         headers: Optional[Dict[str, Any]] = None
         if body_identity:
             if idempotency_key is not None:
@@ -7375,11 +7513,12 @@ class VedikaClient:
                 )
             headers = dict(_NO_IDEMPOTENCY)
         elif idempotency_key is not None:
-            headers = {header_name or "Idempotency-Key": idempotency_key}
-        elif header_name is not None and not any(
+            headers = {name: idempotency_key for name in (header_names or ("Idempotency-Key",))}
+        elif header_names and not any(
             name.lower() in _IDEMPOTENCY_HEADER_NAMES for name in self.session.headers
         ):
-            headers = {header_name: str(uuid.uuid4())}
+            generated = str(uuid.uuid4())
+            headers = {name: generated for name in header_names}
 
         raw_body = None
         if files is not None:
@@ -7478,6 +7617,11 @@ class VedikaClient:
         *,
         system: Optional[str] = None,
         speed: Optional[str] = None,
+        version: Optional[str] = None,
+        detail: Optional[str] = None,
+        max_tokens: Optional[int] = None,
+        stop: Optional[Union[str, List[str]]] = None,
+        seed: Optional[int] = None,
         conversation_id: Optional[str] = None,
         partner_birth_details: Optional[Dict[str, Any]] = None,
         include_remedies: Optional[bool] = None,
@@ -7485,24 +7629,73 @@ class VedikaClient:
         response_format: Optional[str] = None
     ) -> QuestionResponse:
         """
-        Ask a conversational astrology question (UNIQUE to Vedika!).
+        Ask a conversational astrology question.
 
-        This is the only B2B astrology API that supports natural language queries.
+        This method sends natural-language questions to the Vedika API.
 
         Args:
             question: Your astrology question in natural language
             birth_details: Birth information (datetime, latitude, longitude, timezone)
             language: Response language (default: client's default language)
             system: Astrology system — "vedic", "western", or "kp"
-            speed: Delivery tier — "standard" (default), "fast", or "eco". ("quality"
-                was never an accepted value; the API rejects it.) An "eco" request on a
-                deploy without the Eco engine fails closed with a masked 503
-                ECO_UNAVAILABLE before any wallet debit, so it is never charged.
+            speed: Delivery tier — "standard" (default), "fast", "eco" or
+                "pro-ultra". ("quality" was never an accepted value; the API rejects
+                it.) An "eco" request on a deploy without the Eco engine fails closed
+                with a masked 503 ECO_UNAVAILABLE before any wallet debit, so it is
+                never charged.
+            version: Standard-tier engine version, "2.5" (default) or "2" (retiring).
+                Valid only with speed="standard" (or no speed); with any other
+                speed it is a 400 VALIDATION_ERROR. An explicit "2.5" is refused
+                ``stop`` and ``seed``; with no ``version``, a request that carries
+                one of them is served on version "2".
+            detail: Answer length — "brief", "standard" or "detailed".
+                "standard" is the same as leaving it out. "detailed" with
+                ``max_tokens`` below 384 is a 400 DETAIL_BUDGET_CONFLICT (not on
+                "eco").
+            max_tokens: Output-token limit for this answer, an integer. Sent as
+                ``maxTokens``. It runs from 1 to 4000 (1 to 8192 on "eco"); a
+                whole number outside the range is clamped to it, not refused.
+                Without ``max_tokens`` and ``detail`` the limit is 2500 (2000 on
+                "fast", 8192 on "eco"); with ``detail="brief"`` or "detailed" it
+                follows the length that detail asks for (on "eco" it stays 8192).
+                The limit includes reasoning on every tier except "pro-ultra",
+                where it is the answer budget and reasoning headroom is added on
+                top, billed only when used.
+            stop: One stop sequence, or a list of 1 to 4, each 1 to 64 characters.
+                Taken by "fast", "eco", "pro-ultra" and standard speed (without
+                ``version`` it is served on version "2"); an explicit
+                ``version="2.5"`` refuses it.
+            seed: Integer sampling hint. Best effort, not a guarantee of identical
+                output. Taken by "fast", "eco" and standard speed (without
+                ``version`` it is served on version "2"); "pro-ultra" and an
+                explicit ``version="2.5"`` refuse it with a 400
+                CONTROL_UNSUPPORTED_FOR_TIER.
             conversation_id: Continue a previous conversation
             partner_birth_details: Partner's birth details for compatibility queries
             include_remedies: Include BPHS remedies in the response
             category: Query category hint (career, marriage, health, etc.)
             response_format: Response format — "text" or "json"
+
+        The API checks the tier and the answer-length controls (``version``,
+        ``detail``, ``max_tokens``, ``stop``, ``seed``) before anything is billed
+        and refuses an unsupported one with a coded 400 such as
+        ``CONTROL_UNSUPPORTED_FOR_TIER`` (see :class:`QuestionErrorCode`). The
+        client passes them through. Each is sent only when you set it. A 400 is
+        never retried.
+
+        Pro Ultra has two refusals of its own, neither charged:
+        :class:`ProUltraUnavailableError` (503 ``PRO_ULTRA_UNAVAILABLE``: it cannot
+        serve right now, and no other tier answers in its place) and
+        :class:`OutputBudgetExhaustedError` (400 ``OUTPUT_BUDGET_EXHAUSTED``: the
+        output budget went before any text was written and the request had no
+        birth chart; retry with a higher ``max_tokens`` or ``detail="brief"``).
+
+        An answer that reaches its output limit is a normal response, not an
+        error: ``finish_reason`` is "length", ``truncated`` and ``degraded`` are
+        True and ``degraded_reason`` is "budget_truncated". It is not charged, and
+        the text may be cut off, so check ``truncated`` before showing it as final.
+        Without a cut-off, ``finish_reason`` is set only when the request used
+        ``detail``, ``stop`` or ``seed``; a stop-sequence ending reads "complete".
 
         Returns:
             QuestionResponse with answer, confidence, and metadata
@@ -7521,6 +7714,16 @@ class VedikaClient:
             ...     include_remedies=True
             ... )
             >>> print(response.answer)
+
+            Pro Ultra tier, a short answer capped at 600 output tokens:
+
+            >>> response = client.ask_question(
+            ...     question="What are my career prospects this year?",
+            ...     birth_details=birth_details,
+            ...     speed="pro-ultra",
+            ...     detail="brief",
+            ...     max_tokens=600
+            ... )
         """
         data = {
             "question": question,
@@ -7530,8 +7733,7 @@ class VedikaClient:
 
         if system is not None:
             data["system"] = system
-        if speed is not None:
-            data["speed"] = speed
+        data.update(_generation_controls(speed, version, detail, max_tokens, stop, seed))
         if conversation_id is not None:
             data["conversationId"] = conversation_id
         if partner_birth_details is not None:
@@ -7555,6 +7757,11 @@ class VedikaClient:
         conversation_id: Optional[str] = None,
         language: Optional[str] = None,
         speed: Optional[str] = None,
+        version: Optional[str] = None,
+        detail: Optional[str] = None,
+        max_tokens: Optional[int] = None,
+        stop: Optional[Union[str, List[str]]] = None,
+        seed: Optional[int] = None,
     ) -> QuestionResponse:
         """
         Ask a question about a Vastu report you already hold.
@@ -7567,6 +7774,13 @@ class VedikaClient:
         audit or score endpoints (up to 64 KB; drop ``svg``). Birth details are
         not needed. On a follow-up, pass ``conversation_id`` and omit
         ``report``; the conversation's saved report is reused.
+
+        ``speed`` is "standard" (default), "fast", "eco" or "pro-ultra". The
+        answer-length controls are the same as on ``ask_question``: ``version``
+        ("2.5" or "2"; standard speed only), ``detail`` ("brief", "standard" or
+        "detailed"), ``max_tokens`` (sent as ``maxTokens``), ``stop`` (one string
+        or a list of 1 to 4) and ``seed``. Each is sent only when you set it; the
+        API refuses an unsupported control before billing.
 
         Returns:
             QuestionResponse whose ``vastu_context`` lists the report rows the
@@ -7596,8 +7810,7 @@ class VedikaClient:
             data["vastuContext"] = {"reportRef": {"type": report_ref["type"], "id": report_ref["id"]}}
         if conversation_id is not None:
             data["conversationId"] = conversation_id
-        if speed is not None:
-            data["speed"] = speed
+        data.update(_generation_controls(speed, version, detail, max_tokens, stop, seed))
         result = self._request("POST", "/api/v1/astrology/query", data=data)
         return QuestionResponse.from_dict(result)
 
@@ -7605,7 +7818,14 @@ class VedikaClient:
         self,
         question: str,
         birth_details: Dict[str, Any],
-        language: Optional[str] = None
+        language: Optional[str] = None,
+        *,
+        speed: Optional[str] = None,
+        version: Optional[str] = None,
+        detail: Optional[str] = None,
+        max_tokens: Optional[int] = None,
+        stop: Optional[Union[str, List[str]]] = None,
+        seed: Optional[int] = None
     ) -> Iterator[str]:
         """
         Stream conversational astrology question response in real-time.
@@ -7614,6 +7834,21 @@ class VedikaClient:
             question: Your astrology question
             birth_details: Birth information
             language: Response language
+            speed: Delivery tier — "standard" (default), "fast", "eco" or "pro-ultra"
+            version: "2.5" (default) or "2" (retiring); standard speed only
+            detail: "brief", "standard" or "detailed"
+            max_tokens: Output-token limit for this answer (sent as ``maxTokens``)
+            stop: One stop sequence, or a list of 1 to 4
+            seed: Integer sampling hint, best effort
+
+        The API checks these controls before billing and refuses an unsupported
+        one with a coded 400, or Pro Ultra with a 503 ``PRO_ULTRA_UNAVAILABLE``
+        (:class:`ProUltraUnavailableError`), before the first chunk. Each control is
+        sent only when you set it, and a stream is never retried. The
+        ``completed`` event is JSON whose ``metadata`` carries
+        ``finishReason`` and ``truncated``, and ``degraded`` and
+        ``degradedReason`` on a cut-off answer. A cut-off stream is not charged
+        either; the text it already delivered stays with you.
 
         Yields:
             Response chunks as they're generated
@@ -7631,6 +7866,7 @@ class VedikaClient:
             "birthDetails": birth_details,
             "language": language or self.language
         }
+        data.update(_generation_controls(speed, version, detail, max_tokens, stop, seed))
 
         # Route through self.session (a _VedikaSession) so redirects are never
         # followed — a top-level requests.post() would follow a 307 and resend
@@ -9044,11 +9280,11 @@ class VedikaClient:
             person1: dict with datetime, latitude, longitude, timezone
             person2: dict with datetime, latitude, longitude, timezone
 
-        TS->Rust transition note (3.0.6): the result is normalized so the
-        transition-divergent prose keys (``interpretation``, per-aspect
-        ``orb_quality`` / ``signifies``) are always present — the Rust engine
+        Server-version note (3.0.6): the result is normalized so the
+        version-divergent prose keys (``interpretation``, per-aspect
+        ``orb_quality`` / ``signifies``) are always present — a server version
         may omit them while the computed geometry stays parity-exact. Code that
-        reads those keys never raises a KeyError from either engine. The full
+        reads those keys never raises a KeyError from any server version. The full
         payload is preserved; only missing keys are backfilled with empty values.
         """
         result = _v2_payload(self._request("POST", f"/v2/western/{type}",
@@ -9173,7 +9409,8 @@ class VedikaClient:
         Send a voice query (multipart audio upload).
 
         Branches on response Content-Type:
-        - ``audio/mpeg``: binary TTS audio, metadata parsed from
+        - ``audio/wav`` (usual) or ``audio/mpeg`` (backup voice): binary TTS
+          audio, metadata parsed from
           ``X-Vedika-Voice-Meta`` base64 header. Returns a VoiceResponse
           with ``audio=<bytes>`` and ``is_fallback=False``.
         - ``application/json``: TTS failed, text-only fallback. Returns a
@@ -9254,7 +9491,7 @@ class VedikaClient:
                 # TTS fallback path
                 return VoiceResponse.from_json(response.json())
 
-            # Binary audio/mpeg path
+            # Binary audio path (audio/wav or audio/mpeg)
             meta_header = response.headers.get("X-Vedika-Voice-Meta")
             meta: Dict[str, Any] = {}
             if meta_header:
@@ -9505,12 +9742,12 @@ class VedikaClient:
                 person1: dict with datetime, latitude, longitude, timezone
                 person2: dict with datetime, latitude, longitude, timezone
             """
-            # TS->Rust transition (3.0.6): unwrap the v2 envelope like every other
+            # Server-version tolerance (3.0.6): unwrap the v2 envelope like every other
             # v2 domain (this path previously parsed the raw envelope, which on an
             # enveloped response silently zeroed the score — a money/verdict-
             # sensitive family). Full payload kept on `.raw`. The matchmaking
             # TOTAL may differ by engine (value divergence, not shape); kootas /
-            # doshaAnalysis are passthrough dicts so either engine parses cleanly.
+            # doshaAnalysis are passthrough dicts so any server version parses cleanly.
             _r = _v2_payload(self._c._request("POST", "/v2/matrimony/unified-match",
                                               data={"person1": person1, "person2": person2}))
             _o = MatchResult.from_dict(_r)
@@ -9616,9 +9853,9 @@ class VedikaClient:
             Args:
                 birth_details: dict with datetime, latitude, longitude, timezone
             """
-            # TS->Rust transition (3.0.6): unwrap the v2 envelope before parsing
+            # Server-version tolerance (3.0.6): unwrap the v2 envelope before parsing
             # (was parsing the raw envelope). Each system block is a passthrough
-            # dict, so a missing optional system from either engine never crashes.
+            # dict, so a missing optional system from any server version never crashes.
             _r = _v2_payload(self._c._request("POST", "/v2/astrology/dasha/current-all", data=birth_details))
             _o = AllDashaResult.from_dict(_r)
             _o.raw = _r

@@ -1,5 +1,73 @@
 # Changelog
 
+## [3.2.2] - 2026-10-29
+
+### Changed
+- Package descriptions and usage documentation describe supported capabilities without claims about other providers.
+- Language guidance points to operation and plan coverage in the API reference.
+- Response-time guidance describes request and tier dependence rather than promising fixed duration ranges.
+
+## [3.2.1] - 2026-10-24
+
+### Added
+- `QuestionErrorCode.STOP_MATCHED_BEFORE_ANSWER`: the 400 the API returns when a `stop` sequence matches before any answer text is written. It is not charged and not retried; compare `e.code` with it. On a stream it arrives as an `error` event.
+- Vastu delete responses: optional receipt fields (`receiptId`, `receiptStatus`, `readReceipt`, and `deletionReceipt` on a scan delete) are typed.
+
+### Changed
+- Documentation and types: `finish_reason` and `truncated` are on every answer, whatever you sent. On Vedika Pro Ultra a `stop` match reads `stopSequence`; no follow-up text is added after your stop. `detail` on Pro Ultra also sets how much reasoning the model applies before it writes.
+- Documentation: a cut-off stream is not charged, the same as a cut-off JSON answer. Its `completed` event carries `degraded` and `degradedReason` as well as `finishReason` and `truncated`. The 3.2.0 text said a stream that had already delivered text could be billed; the API no longer does that, so the docs now say so.
+
+## [3.2.0] - 2026-10-23
+
+### Behaviour change
+- Vastu room-placement judgments change in the API with the release that carries rules snapshot `vastu-rules-2026-10-18`. `rulesVersion` then accepts `vastu-rules-2026-10-18` (current), `vastu-rules-2026-10-04` and `vastu-rules-2026-09-23`. `vastu-rules-2026-09-23` is deprecated but stays accepted, with its frozen placement judgments, until its sunset on 2027-01-31; move to `vastu-rules-2026-10-18`. A response that applied it (for a batch, one in which an item was evaluated under it, even if that item was then rejected) carries `Deprecation: @1792281600` (an RFC 9745 date, 2026-10-18), `Sunset: Sun, 31 Jan 2027 00:00:00 GMT` and `Link: <https://vedika.io/changelog>; rel="deprecation"`; other versions carry none. Async job results carry no HTTP headers; read `rulesVersion` in each item result. Unknown version strings still return 400 `Unsupported rulesVersion` before billing. Receipts issued under any of the three stay verifiable. Requests with no `rulesVersion` use `vastu-rules-2026-10-18`.
+- Table changes in `vastu-rules-2026-10-18`, all labelled convention (no verse grades these rooms): a living room in the centre is acceptable (the advice to keep the centre clear stays in `guidance`); a dining room has no forbidden zone, and SW, SE and centre are acceptable with advisory notes in `guidance`; a study in the N is ideal. Zones that were defects return no `defect` and no `remedy`. The per-zone `prescribedRooms` and `forbiddenRooms` lists change to match. Update any code or stored expectation that treats those placements as defects, or pins the earlier snapshot ids.
+- Table change in `vastu-rules-2026-10-20` (one placement, labelled convention): a staircase in the East is acceptable instead of a moderate defect, with the advice to keep the East open to light as a note in `guidance`; the other eight staircase zones and every other room are unchanged from `vastu-rules-2026-10-18`. Pin `vastu-rules-2026-10-18` to keep the earlier East judgment; no version is deprecated by this change.
+
+### Fixed
+- `ask_question` and `ask_vastu_report` send their idempotency key in both `X-Idempotency-Key` and `Idempotency-Key`. The question route names the charge from `Idempotency-Key`, so a resend after a 5xx or a timeout that carried only `X-Idempotency-Key` was not recognised as the same request. Every attempt of one call still carries the one key (the JavaScript SDK already sent both).
+- A 429 with body `code` `MONTHLY_SPEND_LIMIT_REACHED` (the account's monthly spend limit) is never retried. It raises `DailyLimitError` (a `RateLimitError`) at once with `code` set, since it clears only in the new month or when the owner raises or removes the limit under Billing.
+
+### Added
+- `speed="pro-ultra"` selects the Pro Ultra tier. The `speed` docstrings listed only "standard", "fast" and "eco".
+- Answer controls on the AI question routes, as keyword-only arguments of `ask_question`, `ask_vastu_report` and `ask_question_stream`: `version` ("2.5" default or "2", retiring; standard speed only), `detail` ("brief", "standard" or "detailed"), `max_tokens` (an integer output-token limit, sent as `maxTokens`), `stop` (one string, or a list of 1 to 4 strings of 1 to 64 characters) and `seed` (integer, best effort). Each is sent only when you set it, and the API refuses an unsupported control before billing with a coded 400, such as `CONTROL_UNSUPPORTED_FOR_TIER`.
+- `ask_question_stream` accepts `speed` and the controls above as keyword-only arguments. The README already showed `speed=` on a stream call, which raised `TypeError`.
+  ```python
+  answer = client.ask_question(
+      question="What are my career prospects this year?",
+      birth_details=birth_details,
+      speed="pro-ultra",
+      detail="brief",
+      max_tokens=600,
+  )
+  ```
+- Vastu response types now follow the published OpenAPI: `VastuPlanGenerateData` types `floors[]` and `warnings[]`, `VastuPlanExportIfcData` types `storeyCount` and `storeys[]`, and each assessments-batch result's `response.data` declares `rulesVersion`. Types only; no request or behaviour change.
+- `ProUltraUnavailableError`, raised for HTTP 503 `PRO_ULTRA_UNAVAILABLE`: Pro Ultra cannot serve right now. The API refuses before billing, so nothing is charged and no other tier answers in its place. It extends `ServerError` and carries `retry_after`. Other 5xx responses still raise `VedikaAPIError` with `status_code`, as before.
+- `OutputBudgetExhaustedError`, raised for HTTP 400 `OUTPUT_BUDGET_EXHAUSTED`: a Pro Ultra question used its whole output budget before any text was written and had no birth chart to answer from. Not charged. It is a `VedikaAPIError`. The client does not raise `max_tokens` for you; do it yourself, or set `detail="brief"`.
+- `QuestionErrorCode` holds the `code` strings of the answer controls and tiers (`CONTROL_UNSUPPORTED_FOR_TIER`, `INVALID_DETAIL`, `INVALID_STOP`, `DETAIL_BUDGET_CONFLICT`, `OUTPUT_BUDGET_EXHAUSTED`, `PRO_ULTRA_UNAVAILABLE`, `ECO_UNAVAILABLE`, `VERSION_UNAVAILABLE`), so `e.code` can be compared without retyping them. `ServerError` and the two new errors are importable from `vedika`, and `ServerError` now accepts `code`.
+- `QuestionResponse` has `finish_reason`, `truncated`, `degraded` and `degraded_reason`, read from the response `metadata` (`None` when absent). An answer that reaches its output limit is a normal response with `finish_reason="length"`, `truncated=True` and `degraded_reason="budget_truncated"`; it is not charged, and the text may be cut off. A cut-off stream reports `finishReason` and `truncated` on its `completed` event; one that had already delivered text can be billed, and it does not set the `degraded` fields on every route. `raw` still holds the whole payload.
+  ```python
+  answer = client.ask_question(question=question, birth_details=birth_details, speed="pro-ultra", max_tokens=300)
+  if answer.truncated:
+      ...  # Not charged. Ask again with a higher max_tokens, or detail="brief".
+  ```
+
+### Changed
+- Documentation: the docstrings and README now state what the API does with each answer control. `max_tokens` runs from 1 to 4000 (1 to 8192 on "eco"), defaults to 2500 (2000 on "fast", 8192 on "eco") when neither `max_tokens` nor `detail` is set, and a whole number outside the range is clamped, not refused. `stop` and `seed` are taken by "fast", "eco" and standard speed (with no `version` the request is served on version "2") and refused with an explicit `version="2.5"`; "pro-ultra" takes `stop` and refuses `seed`. `finish_reason` is set on every cut-off answer, and otherwise only when the request used `detail`, `stop` or `seed`; a stop-sequence ending reads "complete". `detail="detailed"` with a `max_tokens` below 384 is a 400 `DETAIL_BUDGET_CONFLICT`. A `version` sent with a speed other than standard is a 400 `VALIDATION_ERROR`, not `CONTROL_UNSUPPORTED_FOR_TIER`. The README streaming example now prints each chunk as the string it is (it read `chunk.text`) and no longer says fast mode is unavailable on streaming.
+
+## [3.1.3] - 2026-10-15
+
+### Changed
+- Docstrings, comments and this changelog describe server behaviour without naming the technology behind it. No code or API change.
+
+## [3.1.2] - 2026-10-14
+
+3.1.1 was never published to PyPI; the last PyPI release is 3.1.0. This release also carries everything listed under 3.1.1 below.
+
+### Added
+- `upload_room_capture(client, capture, ...)` and `merge_room_captures(client, request, idempotency_key=...)`, importable from `vedika`. `upload_room_capture` sends a `vedika.roomCapture/1` capture to `POST /v2/astrology/vastu/ar/room-capture` and refuses, before anything is sent, a capture of another schema or with no tagged room. `merge_room_captures` sends `ar/capture-merge`; the merge is billed, so it requires a caller-retained `idempotency_key` and refuses a missing or malformed one. Both go through `VedikaClient.vastu_operation`, so auth, retries and error mapping are unchanged.
+- Response fields the API now returns on Vastu results, as typed dictionaries: `auditStatus` (`accepted` or `provisional`, with `reasons`) on `ar/room-capture` and stored scans; `gradeStatus` and `gradeReasons` on `ar/scan-quality`, the detailed floor-plan audit and the plan audit; `directionalScoreStatus` and `directionalScoreMessage` on the plan audit; and `facing` on the plot of a DXF import plan.
+
 ## [3.1.1] - 2026-10-06
 
 ### Fixed
@@ -59,7 +127,7 @@ This is the first PyPI release since 3.0.5. It includes everything listed for 3.
 - Package artifacts no longer carry internal service or provider names.
 - Added the `ar/room-capture` Vastu operation (`VastuOperation.AR_ROOM_CAPTURE`) with typed `VastuRoomCapture` requests, `pointCloudDensityBasis` on scan-quality requests, and an optional `capture` on saved-scan snapshots.
 - Credentials now use only the official HTTPS API origin or literal loopback HTTP. Custom HTTPS origins and remote HTTP are rejected; the legacy insecure-HTTP option cannot bypass this rule.
-- Added typed assessment batches with retained caller idempotency keys, per-item results, HTML report options, and SVG opt-out. All 93 operation responses match recorded Rust fixtures, including versioned scoring and audit coverage metadata.
+- Added typed assessment batches with retained caller idempotency keys, per-item results, HTML report options, and SVG opt-out. All 93 operation responses match recorded server fixtures, including versioned scoring and audit coverage metadata.
 
 - **Compatibility change:** Python 3.10 or later is now required so the SDK can use urllib3 2.7.0 or later, which includes current redirect and decompression fixes. Requests 2.33.0 or later includes credential and archive-helper fixes. Python 3.8 and 3.9 are no longer supported. Both HTTP dependencies are capped below 3.0 pending major-version compatibility testing.
 - Package preparation scripts build local artifacts without changing Git or publishing.
@@ -113,7 +181,7 @@ release on PyPI is 3.0.5, which does **not** contain either of the fixes above.
 
 ### Changed (transition-compat — no breaking changes)
 - **Resilient v2-envelope unwrapping for the platform transition.** `_v2_payload()` previously returned any top-level `data` key unconditionally, which could mis-unwrap a bare reading that happened to nest a `data` block, and it only ran on the methods that called it. Two transition-sensitive families bypassed it entirely — `matrimony.unified_match` / `dosha_cancellation` (a verdict/money-sensitive family that, on an enveloped response, silently zeroed the score) and `dasha.current_all` — they now unwrap the envelope like every other v2 domain. Unwrapping is keyed on the canonical envelope markers (`success` / `billing` / `meta`) plus a dict `data`, so `billing` is no longer required.
-- **`get_western_relationship()` is now transition-tolerant.** Synastry/composite prose (`interpretation`, per-aspect `orb_quality`/`signifies`) may be absent on some responses while the computed geometry stays parity-exact. The result is normalized so those keys are always present; code reading them never raises `KeyError` from either engine.
+- **`get_western_relationship()` is now transition-tolerant.** Synastry/composite prose (`interpretation`, per-aspect `orb_quality`/`signifies`) may be absent on some responses while the computed geometry stays parity-exact. The result is normalized so those keys are always present; code reading them never raises `KeyError` from any server version.
 
 ### Added
 - `normalize_western_relationship()` helper (exported).

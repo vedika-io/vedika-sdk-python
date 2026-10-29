@@ -9,10 +9,10 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="vedika-sdk",
-    version="3.1.1",
+    version="3.2.2",
     author="Vedika Intelligence",
     author_email="support@vedika.io",
-    description="The only B2B astrology API with AI-powered chatbot queries",
+    description="Python SDK for Vedika astrology APIs, structured calculations and conversational readings",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/vedika-io/vedika-sdk-python",

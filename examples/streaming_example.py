@@ -34,7 +34,7 @@ def main():
     print("🌊 Streaming Response Example")
     print("=" * 60)
     print(f"\n❓ Question: {question}")
-    print("\n⏳ Streaming response (this may take 20-40 seconds)...")
+    print("\n⏳ Waiting for the response stream...")
     print("\n" + "-" * 60)
     print()
 

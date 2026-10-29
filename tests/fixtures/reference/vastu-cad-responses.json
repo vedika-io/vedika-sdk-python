@@ -1,0 +1,1067 @@
+{
+  "demos": {
+    "vastu__plan_import_dxf": {
+      "billing": {
+        "balanceAfter": 100,
+        "balanceBefore": 100,
+        "category": "astrology",
+        "charged": 0,
+        "currency": "USD",
+        "endpoint": "/sandbox/vastu/plan/import-dxf"
+      },
+      "data": {
+        "canonicalUnits": "m",
+        "inputUnits": "mm",
+        "mappingReport": [
+          {
+            "entityId": "34",
+            "entityType": "LWPOLYLINE",
+            "handle": "34",
+            "layer": "A-PLOT",
+            "planIds": [
+              "34"
+            ],
+            "reason": null,
+            "role": "plot",
+            "status": "mapped"
+          },
+          {
+            "entityId": "35",
+            "entityType": "LWPOLYLINE",
+            "handle": "35",
+            "layer": "A-ROOM",
+            "planIds": [
+              "35"
+            ],
+            "reason": null,
+            "role": "room",
+            "status": "mapped"
+          },
+          {
+            "entityId": "36",
+            "entityType": "TEXT",
+            "handle": "36",
+            "layer": "A-NAME",
+            "planIds": [
+              "36"
+            ],
+            "reason": null,
+            "role": "label",
+            "status": "mapped"
+          },
+          {
+            "entityId": "37",
+            "entityType": "POLYLINE",
+            "handle": "37",
+            "layer": "A-ROOM",
+            "planIds": [
+              "37"
+            ],
+            "reason": null,
+            "role": "room",
+            "status": "mapped"
+          },
+          {
+            "entityId": "39",
+            "entityType": "VERTEX",
+            "handle": "39",
+            "layer": "A-ROOM",
+            "parentId": "37",
+            "status": "attached"
+          },
+          {
+            "entityId": "3A",
+            "entityType": "VERTEX",
+            "handle": "3A",
+            "layer": "A-ROOM",
+            "parentId": "37",
+            "status": "attached"
+          },
+          {
+            "entityId": "3B",
+            "entityType": "VERTEX",
+            "handle": "3B",
+            "layer": "A-ROOM",
+            "parentId": "37",
+            "status": "attached"
+          },
+          {
+            "entityId": "3C",
+            "entityType": "VERTEX",
+            "handle": "3C",
+            "layer": "A-ROOM",
+            "parentId": "37",
+            "status": "attached"
+          },
+          {
+            "entityId": "3D",
+            "entityType": "VERTEX",
+            "handle": "3D",
+            "layer": "A-ROOM",
+            "parentId": "37",
+            "status": "attached"
+          },
+          {
+            "entityId": "3E",
+            "entityType": "VERTEX",
+            "handle": "3E",
+            "layer": "A-ROOM",
+            "parentId": "37",
+            "status": "attached"
+          },
+          {
+            "entityId": "38",
+            "entityType": "SEQEND",
+            "handle": "38",
+            "layer": "A-ROOM",
+            "parentId": "37",
+            "status": "attached"
+          },
+          {
+            "entityId": "3F",
+            "entityType": "MTEXT",
+            "handle": "3F",
+            "layer": "A-NAME",
+            "planIds": [
+              "3F"
+            ],
+            "reason": null,
+            "role": "label",
+            "status": "mapped"
+          },
+          {
+            "entityId": "40",
+            "entityType": "HATCH",
+            "handle": "40",
+            "layer": "A-SPACE",
+            "planIds": [
+              "40"
+            ],
+            "reason": null,
+            "role": "room",
+            "status": "mapped"
+          },
+          {
+            "entityId": "45/44",
+            "entityType": "ATTDEF",
+            "handle": "44",
+            "layer": "A-NAME",
+            "planIds": [],
+            "reason": "Empty label",
+            "role": "label",
+            "status": "unmapped"
+          },
+          {
+            "entityId": "45",
+            "entityType": "INSERT",
+            "handle": "45",
+            "layer": "A-NAME",
+            "planIds": [
+              "45"
+            ],
+            "reason": null,
+            "role": "room",
+            "status": "mapped"
+          },
+          {
+            "entityId": "47",
+            "entityType": "ATTRIB",
+            "handle": "47",
+            "layer": "0",
+            "parentId": "45",
+            "status": "attached"
+          },
+          {
+            "entityId": "46",
+            "entityType": "SEQEND",
+            "handle": "46",
+            "layer": "A-NAME",
+            "parentId": "45",
+            "status": "attached"
+          },
+          {
+            "entityId": "4C",
+            "entityType": "INSERT",
+            "handle": "4C",
+            "layer": "A-DOOR",
+            "planIds": [
+              "4C"
+            ],
+            "reason": null,
+            "role": "door",
+            "status": "mapped"
+          },
+          {
+            "entityId": "4E",
+            "entityType": "ATTRIB",
+            "handle": "4E",
+            "layer": "A-DOOR",
+            "parentId": "4C",
+            "status": "attached"
+          },
+          {
+            "entityId": "4D",
+            "entityType": "SEQEND",
+            "handle": "4D",
+            "layer": "A-DOOR",
+            "parentId": "4C",
+            "status": "attached"
+          }
+        ],
+        "metresPerInputUnit": 0.001,
+        "needsReview": true,
+        "plan": {
+          "cadMetadata": {
+            "format": "dxf",
+            "insUnits": 4,
+            "metresPerUnit": 0.001,
+            "originMetres": [
+              100,
+              200
+            ],
+            "rotationToTrueNorthDeg": 30,
+            "sourceUnits": "millimetres",
+            "trueNorthFrameOffsetMetres": [
+              -3.9999999999999996,
+              0
+            ],
+            "trueNorthKnown": true,
+            "unitsCode": 4
+          },
+          "canonicalUnits": "m",
+          "openings": {
+            "doors": [
+              {
+                "centre": [
+                  5.255736835487438,
+                  0.7250000000000013
+                ],
+                "id": "4C",
+                "line": [
+                  [
+                    4.866025403784438,
+                    0.49999999999999994
+                  ],
+                  [
+                    5.645448267190438,
+                    0.9500000000000027
+                  ]
+                ],
+                "source": {
+                  "block": "DOOR_SINGLE",
+                  "handle": "4C",
+                  "layer": "A-DOOR"
+                },
+                "type": "door",
+                "width": 0.9000000000000057
+              }
+            ],
+            "units": "metres",
+            "windows": []
+          },
+          "orientationDeg": 0,
+          "plot": {
+            "area": 96,
+            "facing": "east",
+            "length": 12.928203230275509,
+            "polygon": [
+              [
+                3.9999999999999996,
+                0
+              ],
+              [
+                14.392304845413264,
+                5.999999999999999
+              ],
+              [
+                10.392304845413264,
+                12.928203230275509
+              ],
+              [
+                0,
+                6.92820323027551
+              ]
+            ],
+            "units": "metres",
+            "width": 14.392304845413264
+          },
+          "rooms": [
+            {
+              "area": 12,
+              "centre": [
+                4.982050807568878,
+                2.299038105676658
+              ],
+              "h": 4.598076211353316,
+              "id": "35",
+              "labelEntityId": "36",
+              "name": "Kitchen",
+              "polygon": [
+                [
+                  3.9999999999999996,
+                  0
+                ],
+                [
+                  7.464101615137754,
+                  1.9999999999999998
+                ],
+                [
+                  5.964101615137754,
+                  4.598076211353316
+                ],
+                [
+                  2.5,
+                  2.598076211353316
+                ]
+              ],
+              "source": {
+                "entityType": "LWPOLYLINE",
+                "handle": "35",
+                "layer": "A-ROOM"
+              },
+              "w": 4.964101615137754,
+              "x": 2.5,
+              "y": 0
+            },
+            {
+              "area": 14,
+              "centre": [
+                8.17957736502314,
+                4.475045363900783
+              ],
+              "h": 4.598076211353316,
+              "id": "37",
+              "labelEntityId": "3F",
+              "name": "Study",
+              "polygon": [
+                [
+                  7.464101615137754,
+                  1.9999999999999998
+                ],
+                [
+                  10.928203230275509,
+                  3.9999999999999996
+                ],
+                [
+                  9.428203230275509,
+                  6.598076211353316
+                ],
+                [
+                  7.696152422706632,
+                  5.598076211353316
+                ],
+                [
+                  7.196152422706632,
+                  6.464101615137754
+                ],
+                [
+                  5.464101615137754,
+                  5.464101615137754
+                ]
+              ],
+              "source": {
+                "entityType": "POLYLINE",
+                "handle": "37",
+                "layer": "A-ROOM"
+              },
+              "w": 5.464101615137754,
+              "x": 5.464101615137754,
+              "y": 1.9999999999999998
+            },
+            {
+              "area": 9,
+              "centre": [
+                2.549038105676658,
+                5.513139720814413
+              ],
+              "h": 4.098076211353316,
+              "id": "40",
+              "labelEntityId": "47",
+              "name": "Pooja",
+              "polygon": [
+                [
+                  1.9999999999999998,
+                  3.464101615137755
+                ],
+                [
+                  4.598076211353316,
+                  4.964101615137754
+                ],
+                [
+                  3.098076211353316,
+                  7.562177826491071
+                ],
+                [
+                  0.5,
+                  6.062177826491071
+                ]
+              ],
+              "source": {
+                "entityType": "HATCH",
+                "handle": "40",
+                "layer": "A-SPACE"
+              },
+              "w": 4.098076211353316,
+              "x": 0.5,
+              "y": 3.464101615137755
+            }
+          ],
+          "sourceInputUnits": "mm",
+          "trueNorthDeg": 30,
+          "units": "metres"
+        },
+        "reviewReasons": [
+          {
+            "id": "45/44",
+            "reason": "Empty label"
+          },
+          {
+            "id": "4C",
+            "reason": "Opening classified by block/layer/attribute heuristics; verify width and position"
+          }
+        ]
+      },
+      "meta": {
+        "contentMode": "demo_fixture",
+        "emptyFieldsDiscarded": [],
+        "engine": "vedika-intelligence",
+        "inputUsage": "no_body_sent",
+        "limitsApplied": [],
+        "mode": "sandbox",
+        "note": "No body was sent, so this is a synthetic demo fixture. Supply the complete input required by this endpoint to compute your own result.",
+        "receivedFields": [],
+        "sandboxLimits": {
+          "maxDimension": 500,
+          "maxPolygonVertices": 16,
+          "maxRooms": 8
+        },
+        "version": "2.1.0"
+      },
+      "success": true
+    },
+    "vastu__plan_export_ifc": {
+      "billing": {
+        "balanceAfter": 100,
+        "balanceBefore": 100,
+        "category": "astrology",
+        "charged": 0,
+        "currency": "USD",
+        "endpoint": "/sandbox/vastu/plan/export-ifc"
+      },
+      "data": {
+        "canonicalUnits": "m",
+        "contentType": "application/x-step",
+        "fileName": "vastu-plan.ifc",
+        "ifc": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition [CoordinationView]'),'2;1');\nFILE_NAME('vastu-plan.ifc','1970-01-01T00:00:00',('Vedika'),('Vedika'),'Vedika','Vedika','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=IFCPERSON($,$,'Vedika',$,$,$,$,$);\n#2=IFCORGANIZATION($,'Vedika',$,$,$);\n#3=IFCPERSONANDORGANIZATION(#1,#2,$);\n#4=IFCAPPLICATION(#2,'1','Vedika plan interchange','Vedika');\n#5=IFCOWNERHISTORY(#3,#4,$,.ADDED.,$,$,$,0);\n#6=IFCCARTESIANPOINT((0.,0.,0.));\n#7=IFCDIRECTION((0.,0.,1.));\n#8=IFCAXIS2PLACEMENT3D(#6,$,$);\n#9=IFCLOCALPLACEMENT($,#8);\n#10=IFCDIRECTION((0.,1.));\n#11=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,1.E-8,#8,#10);\n#12=IFCSIUNIT(*,.LENGTHUNIT.,$,.METRE.);\n#13=IFCSIUNIT(*,.LENGTHUNIT.,.MILLI.,.METRE.);\n#14=IFCUNITASSIGNMENT((#13));\n#15=IFCCARTESIANPOINT((0.000000000000,0.000000000000));\n#16=IFCCARTESIANPOINT((12000.000000000000,0.000000000000));\n#17=IFCCARTESIANPOINT((12000.000000000000,12000.000000000000));\n#18=IFCCARTESIANPOINT((0.000000000000,12000.000000000000));\n#19=IFCCARTESIANPOINT((0.000000000000,0.000000000000));\n#20=IFCPOLYLINE((#15,#16,#17,#18,#19));\n#21=IFCCARTESIANPOINT((4000.000000000000,4000.000000000000));\n#22=IFCCARTESIANPOINT((8000.000000000000,4000.000000000000));\n#23=IFCCARTESIANPOINT((8000.000000000000,8000.000000000000));\n#24=IFCCARTESIANPOINT((4000.000000000000,8000.000000000000));\n#25=IFCCARTESIANPOINT((4000.000000000000,4000.000000000000));\n#26=IFCPOLYLINE((#21,#22,#23,#24,#25));\n#27=IFCARBITRARYPROFILEDEFWITHVOIDS(.AREA.,$,#20,(#26));\n#28=IFCEXTRUDEDAREASOLID(#27,#8,#7,100);\n#29=IFCSHAPEREPRESENTATION(#11,'FootPrint','SweptSolid',(#28));\n#30=IFCPRODUCTDEFINITIONSHAPE($,$,(#29));\n#31=IFCPROJECT('0aGX3aX3UsLMc0fm99gPDf',#5,'Vedika plan',$,$,$,$,(#11),#14);\n#32=IFCBUILDING('1HP_bdVX_yK0xB5r7kmxAc',#5,'Building',$,$,#9,#30,$,.ELEMENT.,$,$,$);\n#33=IFCBUILDINGSTOREY('2ZuVIJMmaPiqR2olJQ60UA',#5,'Floor',$,$,#9,$,$,.ELEMENT.,0.);\n#34=IFCRELAGGREGATES('3I3FgCytVIb9OdiBThiXhB',#5,$,$,#31,(#32));\n#35=IFCRELAGGREGATES('2vOhXfigXNF3Pin2F2ThRC',#5,$,$,#32,(#33));\n#36=IFCCARTESIANPOINT((0.000000000000,0.000000000000));\n#37=IFCCARTESIANPOINT((12000.000000000000,0.000000000000));\n#38=IFCCARTESIANPOINT((12000.000000000000,4000.000000000000));\n#39=IFCCARTESIANPOINT((0.000000000000,4000.000000000000));\n#40=IFCCARTESIANPOINT((0.000000000000,0.000000000000));\n#41=IFCPOLYLINE((#36,#37,#38,#39,#40));\n#42=IFCARBITRARYCLOSEDPROFILEDEF(.AREA.,$,#41);\n#43=IFCEXTRUDEDAREASOLID(#42,#8,#7,3000);\n#44=IFCSHAPEREPRESENTATION(#11,'Body','SweptSolid',(#43));\n#45=IFCPRODUCTDEFINITIONSHAPE($,$,(#44));\n#46=IFCSPACE('1NCxw5CY2NXSY$OOZRYuHm',#5,'living',$,$,#9,#45,'living',.ELEMENT.,.INTERNAL.,$);\n#47=IFCRELAGGREGATES('1TNQA5EWXkYF6RSbVaiI5$',#5,$,$,#33,(#46));\nENDSEC;\nEND-ISO-10303-21;\n",
+        "inputUnits": "m",
+        "metresPerInputUnit": 1,
+        "outputUnits": "mm",
+        "roomCount": 1,
+        "schema": "IFC4",
+        "storeyCount": 1,
+        "storeys": [
+          {
+            "elevationM": 0,
+            "level": 0,
+            "name": "Floor",
+            "roomCount": 1
+          }
+        ],
+        "units": "m"
+      },
+      "meta": {
+        "contentMode": "computed_from_request",
+        "emptyFieldsDiscarded": [],
+        "engine": "vedika-intelligence",
+        "inputUsage": "accepted_within_sandbox_limits",
+        "limitsApplied": [],
+        "mode": "sandbox",
+        "note": "This answer was computed from your supplied input within the stated sandbox limits. Missing fields are not filled from the demo, and explicit empty values reach the endpoint validator. No account storage or billing occurs.",
+        "receivedFields": [
+          "maxChargeUsd",
+          "outputUnits",
+          "plan"
+        ],
+        "sandboxLimits": {
+          "maxDimension": 500,
+          "maxPolygonVertices": 16,
+          "maxRooms": 8
+        },
+        "version": "2.1.0"
+      },
+      "success": true
+    },
+    "vastu__plan_convert_units": {
+      "billing": {
+        "balanceAfter": 100,
+        "balanceBefore": 100,
+        "category": "astrology",
+        "charged": 0,
+        "currency": "USD",
+        "endpoint": "/sandbox/vastu/plan/convert-units"
+      },
+      "data": {
+        "canonicalUnits": "m",
+        "inputUnits": "m",
+        "outputUnits": "ft",
+        "plan": {
+          "plot": {
+            "holes": [
+              [
+                [
+                  13.123359580052492,
+                  13.123359580052492
+                ],
+                [
+                  26.246719160104984,
+                  13.123359580052492
+                ],
+                [
+                  26.246719160104984,
+                  26.246719160104984
+                ],
+                [
+                  13.123359580052492,
+                  26.246719160104984
+                ]
+              ]
+            ],
+            "polygon": [
+              [
+                0,
+                0
+              ],
+              [
+                39.370078740157474,
+                0
+              ],
+              [
+                39.370078740157474,
+                39.370078740157474
+              ],
+              [
+                0,
+                39.370078740157474
+              ]
+            ],
+            "units": "ft"
+          },
+          "rooms": [
+            {
+              "id": "living",
+              "name": "living",
+              "polygon": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  39.370078740157474,
+                  0
+                ],
+                [
+                  39.370078740157474,
+                  13.123359580052492
+                ],
+                [
+                  0,
+                  13.123359580052492
+                ]
+              ]
+            }
+          ],
+          "units": "ft"
+        },
+        "pricing": {
+          "currency": "USD",
+          "price": "0.00"
+        },
+        "scaleFactor": 3.280839895013123
+      },
+      "meta": {
+        "contentMode": "computed_from_request",
+        "emptyFieldsDiscarded": [],
+        "engine": "vedika-intelligence",
+        "inputUsage": "accepted_within_sandbox_limits",
+        "limitsApplied": [],
+        "mode": "sandbox",
+        "note": "This answer was computed from your supplied input within the stated sandbox limits. Missing fields are not filled from the demo, and explicit empty values reach the endpoint validator. No account storage or billing occurs.",
+        "receivedFields": [
+          "inputUnits",
+          "outputUnits",
+          "plan"
+        ],
+        "sandboxLimits": {
+          "maxDimension": 500,
+          "maxPolygonVertices": 16,
+          "maxRooms": 8
+        },
+        "version": "2.1.0"
+      },
+      "success": true
+    },
+    "vastu__plan_export_dxf": {
+      "billing": {
+        "balanceAfter": 100,
+        "balanceBefore": 100,
+        "category": "astrology",
+        "charged": 0,
+        "currency": "USD",
+        "endpoint": "/sandbox/vastu/plan/export-dxf"
+      },
+      "data": {
+        "canonicalUnits": "m",
+        "contentType": "application/dxf",
+        "dimensionCount": 4,
+        "dxf": "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1027\n9\n$ACADMAINTVER\n70\n     0\n9\n$DWGCODEPAGE\n3\nANSI_1252\n9\n$LASTSAVEDBY\n1\n\n9\n$REQUIREDVERSIONS\n160\n0\n9\n$INSBASE\n10\n0.0\n20\n0.0\n30\n0.0\n9\n$EXTMIN\n10\n0.0\n20\n0.0\n30\n0.0\n9\n$EXTMAX\n10\n0.0\n20\n0.0\n30\n0.0\n9\n$LIMMIN\n10\n0.0\n20\n0.0\n9\n$LIMMAX\n10\n12.0\n20\n9.0\n9\n$ORTHOMODE\n70\n     0\n9\n$REGENMODE\n70\n     1\n9\n$FILLMODE\n70\n     1\n9\n$QTEXTMODE\n70\n     0\n9\n$MIRRTEXT\n70\n     0\n9\n$LTSCALE\n40\n1.0\n9\n$ATTMODE\n70\n     1\n9\n$TEXTSIZE\n40\n0.2\n9\n$TRACEWID\n40\n0.05\n9\n$TEXTSTYLE\n7\nSTANDARD\n9\n$CLAYER\n8\n0\n9\n$CELTYPE\n6\nBYLAYER\n9\n$CECOLOR\n62\n   256\n9\n$CELTSCALE\n40\n1.0\n9\n$DISPSILH\n70\n     0\n9\n$DIMSCALE\n40\n1.0\n9\n$DIMASZ\n40\n0.18\n9\n$DIMEXO\n40\n0.0625\n9\n$DIMDLI\n40\n0.38\n9\n$DIMRND\n40\n0.0\n9\n$DIMDLE\n40\n0.0\n9\n$DIMEXE\n40\n0.18\n9\n$DIMTP\n40\n0.0\n9\n$DIMTM\n40\n0.0\n9\n$DIMTXT\n40\n0.18\n9\n$DIMCEN\n40\n0.09\n9\n$DIMTSZ\n40\n0.0\n9\n$DIMTOL\n70\n     0\n9\n$DIMLIM\n70\n     0\n9\n$DIMTIH\n70\n     1\n9\n$DIMTOH\n70\n     1\n9\n$DIMSE1\n70\n     0\n9\n$DIMSE2\n70\n     0\n9\n$DIMTAD\n70\n     0\n9\n$DIMZIN\n70\n     0\n9\n$DIMBLK\n1\n\n9\n$DIMASO\n70\n     1\n9\n$DIMSHO\n70\n     1\n9\n$DIMPOST\n1\n\n9\n$DIMAPOST\n1\n\n9\n$DIMALT\n70\n     0\n9\n$DIMALTD\n70\n     2\n9\n$DIMALTF\n40\n25.4\n9\n$DIMLFAC\n40\n1.0\n9\n$DIMTOFL\n70\n     0\n9\n$DIMTVP\n40\n0.0\n9\n$DIMTIX\n70\n     0\n9\n$DIMSOXD\n70\n     0\n9\n$DIMSAH\n70\n     0\n9\n$DIMBLK1\n1\n\n9\n$DIMBLK2\n1\n\n9\n$DIMSTYLE\n2\nSTANDARD\n9\n$DIMCLRD\n70\n     0\n9\n$DIMCLRE\n70\n     0\n9\n$DIMCLRT\n70\n     0\n9\n$DIMTFAC\n40\n1.0\n9\n$DIMGAP\n40\n0.09\n9\n$DIMJUST\n70\n     0\n9\n$DIMSD1\n70\n     0\n9\n$DIMSD2\n70\n     0\n9\n$DIMTOLJ\n70\n     1\n9\n$DIMTZIN\n70\n     0\n9\n$DIMALTZ\n70\n     0\n9\n$DIMALTTZ\n70\n     0\n9\n$DIMUPT\n70\n     0\n9\n$DIMDEC\n70\n     4\n9\n$DIMTDEC\n70\n     4\n9\n$DIMALTU\n70\n     2\n9\n$DIMALTTD\n70\n     2\n9\n$DIMTXSTY\n7\nSTANDARD\n9\n$DIMAUNIT\n70\n     0\n9\n$DIMADEC\n70\n     0\n9\n$DIMALTRND\n40\n0.0\n9\n$DIMAZIN\n70\n     0\n9\n$DIMDSEP\n70\n    46\n9\n$DIMATFIT\n70\n     0\n9\n$DIMFRAC\n70\n     0\n9\n$DIMLDRBLK\n1\n\n9\n$DIMLUNIT\n70\n     2\n9\n$DIMLWD\n70\n    -2\n9\n$DIMLWE\n70\n    -2\n9\n$DIMTMOVE\n70\n     0\n9\n$DIMFXL\n40\n1.0\n9\n$DIMFXLON\n70\n     0\n9\n$DIMJOGANG\n40\n0.785398163397\n9\n$DIMTFILL\n70\n     0\n9\n$DIMTFILLCLR\n70\n     0\n9\n$DIMARCSYM\n70\n     0\n9\n$DIMLTYPE\n6\nBYLAYER\n9\n$DIMLTEX1\n6\n\n9\n$DIMLTEX2\n6\n\n9\n$DIMTXTDIRECTION\n70\n     0\n9\n$LUNITS\n70\n     2\n9\n$LUPREC\n70\n     4\n9\n$SKETCHINC\n40\n0.1\n9\n$FILLETRAD\n40\n0.0\n9\n$AUNITS\n70\n     0\n9\n$AUPREC\n70\n     0\n9\n$MENU\n1\n.\n9\n$ELEVATION\n40\n0.0\n9\n$PELEVATION\n40\n0.0\n9\n$THICKNESS\n40\n0.0\n9\n$LIMCHECK\n70\n     0\n9\n$CHAMFERA\n40\n0.0\n9\n$CHAMFERB\n40\n0.0\n9\n$CHAMFERC\n40\n0.0\n9\n$CHAMFERD\n40\n0.0\n9\n$SKPOLY\n70\n     0\n9\n$TDCREATE\n40\n2461334.693206018303\n9\n$TDUCREATE\n40\n2461334.693206018303\n9\n$TDUPDATE\n40\n2461334.693206018303\n9\n$TDUUPDATE\n40\n2461334.693206018303\n9\n$TDINDWG\n40\n0.0\n9\n$TDUSRTIMER\n40\n0.0\n9\n$USRTIMER\n70\n     1\n9\n$ANGBASE\n50\n0.0\n9\n$ANGDIR\n70\n     0\n9\n$PDMODE\n70\n     0\n9\n$PDSIZE\n40\n0.0\n9\n$PLINEWID\n40\n0.0\n9\n$SPLFRAME\n70\n     0\n9\n$SPLINETYPE\n70\n     6\n9\n$SPLINESEGS\n70\n     8\n9\n$HANDSEED\n5\n169\n9\n$SURFTAB1\n70\n     6\n9\n$SURFTAB2\n70\n     6\n9\n$SURFTYPE\n70\n     6\n9\n$SURFU\n70\n     6\n9\n$SURFV\n70\n     6\n9\n$UCSBASE\n2\n\n9\n$UCSNAME\n2\n\n9\n$UCSORG\n10\n0.0\n20\n0.0\n30\n0.0\n9\n$UCSXDIR\n10\n1.0\n20\n0.0\n30\n0.0\n9\n$UCSYDIR\n10\n0.0\n20\n1.0\n30\n0.0\n9\n$UCSORTHOREF\n2\n\n9\n$UCSORTHOVIEW\n70\n     0\n9\n$UCSORGTOP\n10\n0.0\n20\n0.0\n30\n0.0\n9\n$UCSORGBOTTOM\n10\n0.0\n20\n0.0\n30\n0.0\n9\n$UCSORGLEFT\n10\n0.0\n20\n0.0\n30\n0.0\n9\n$UCSORGRIGHT\n10\n0.0\n20\n0.0\n30\n0.0\n9\n$UCSORGFRONT\n10\n0.0\n20\n0.0\n30\n0.0\n9\n$UCSORGBACK\n10\n0.0\n20\n0.0\n30\n0.0\n9\n$PUCSBASE\n2\n\n9\n$PUCSNAME\n2\n\n9\n$PUCSORG\n10\n0.0\n20\n0.0\n30\n0.0\n9\n$PUCSXDIR\n10\n1.0\n20\n0.0\n30\n0.0\n9\n$PUCSYDIR\n10\n0.0\n20\n1.0\n30\n0.0\n9\n$PUCSORTHOREF\n2\n\n9\n$PUCSORTHOVIEW\n70\n     0\n9\n$PUCSORGTOP\n10\n0.0\n20\n0.0\n30\n0.0\n9\n$PUCSORGBOTTOM\n10\n0.0\n20\n0.0\n30\n0.0\n9\n$PUCSORGLEFT\n10\n0.0\n20\n0.0\n30\n0.0\n9\n$PUCSORGRIGHT\n10\n0.0\n20\n0.0\n30\n0.0\n9\n$PUCSORGFRONT\n10\n0.0\n20\n0.0\n30\n0.0\n9\n$PUCSORGBACK\n10\n0.0\n20\n0.0\n30\n0.0\n9\n$USERI1\n70\n     0\n9\n$USERI2\n70\n     0\n9\n$USERI3\n70\n     0\n9\n$USERI4\n70\n     0\n9\n$USERI5\n70\n     0\n9\n$USERR1\n40\n0.0\n9\n$USERR2\n40\n0.0\n9\n$USERR3\n40\n0.0\n9\n$USERR4\n40\n0.0\n9\n$USERR5\n40\n0.0\n9\n$WORLDVIEW\n70\n     1\n9\n$SHADEDGE\n70\n     3\n9\n$SHADEDIF\n70\n    70\n9\n$TILEMODE\n70\n     1\n9\n$MAXACTVP\n70\n    64\n9\n$PINSBASE\n10\n0.0\n20\n0.0\n30\n0.0\n9\n$PLIMCHECK\n70\n     0\n9\n$PEXTMIN\n10\n100000000000000000000.0\n20\n100000000000000000000.0\n30\n100000000000000000000.0\n9\n$PEXTMAX\n10\n-100000000000000000000.0\n20\n-100000000000000000000.0\n30\n-100000000000000000000.0\n9\n$PLIMMIN\n10\n0.0\n20\n0.0\n9\n$PLIMMAX\n10\n12.0\n20\n9.0\n9\n$UNITMODE\n70\n     0\n9\n$VISRETAIN\n70\n     1\n9\n$PLINEGEN\n70\n     0\n9\n$PSLTSCALE\n70\n     1\n9\n$TREEDEPTH\n70\n  3020\n9\n$CMLSTYLE\n2\nSTANDARD\n9\n$CMLJUST\n70\n     0\n9\n$CMLSCALE\n40\n1.0\n9\n$PROXYGRAPHICS\n70\n     1\n9\n$MEASUREMENT\n70\n     0\n9\n$CELWEIGHT\n370\n    -1\n9\n$ENDCAPS\n280\n     0\n9\n$JOINSTYLE\n280\n     0\n9\n$LWDISPLAY\n290\n0\n9\n$INSUNITS\n70\n     6\n9\n$HYPERLINKBASE\n1\n\n9\n$STYLESHEET\n1\n\n9\n$XEDIT\n290\n1\n9\n$CEPSNTYPE\n380\n     0\n9\n$PSTYLEMODE\n290\n1\n9\n$FINGERPRINTGUID\n2\n3fcac62a-4789-4814-aeb0-299aade46757\n9\n$VERSIONGUID\n2\n4b1cff81-76dc-463d-b7c4-468d3d75951e\n9\n$EXTNAMES\n290\n1\n9\n$PSVPSCALE\n40\n0.0\n9\n$OLESTARTUP\n290\n0\n9\n$SORTENTS\n280\n   127\n9\n$INDEXCTL\n280\n     0\n9\n$HIDETEXT\n280\n     0\n9\n$XCLIPFRAME\n280\n     2\n9\n$HALOGAP\n280\n     0\n9\n$OBSCOLOR\n70\n   257\n9\n$OBSLTYPE\n280\n     0\n9\n$INTERSECTIONDISPLAY\n280\n     0\n9\n$INTERSECTIONCOLOR\n70\n   257\n9\n$DIMASSOC\n280\n     1\n9\n$PROJECTNAME\n1\n\n9\n$CAMERADISPLAY\n290\n0\n9\n$LENSLENGTH\n40\n50.0\n9\n$CAMERAHEIGHT\n40\n0.0\n9\n$STEPSPERSEC\n40\n2.0\n9\n$STEPSIZE\n40\n6.0\n9\n$3DDWFPREC\n40\n2.0\n9\n$PSOLWIDTH\n40\n0.25\n9\n$PSOLHEIGHT\n40\n4.0\n9\n$LOFTANG1\n40\n1.570796326795\n9\n$LOFTANG2\n40\n1.570796326795\n9\n$LOFTMAG1\n40\n0.0\n9\n$LOFTMAG2\n40\n0.0\n9\n$LOFTPARAM\n70\n     7\n9\n$LOFTNORMALS\n280\n     1\n9\n$LATITUDE\n40\n37.795\n9\n$LONGITUDE\n40\n-122.394\n9\n$NORTHDIRECTION\n40\n0.0\n9\n$TIMEZONE\n70\n -8000\n9\n$LIGHTGLYPHDISPLAY\n280\n     1\n9\n$TILEMODELIGHTSYNCH\n280\n     1\n9\n$SOLIDHIST\n280\n     0\n9\n$SHOWHIST\n280\n     1\n9\n$DWFFRAME\n280\n     2\n9\n$DGNFRAME\n280\n     0\n9\n$REALWORLDSCALE\n290\n1\n9\n$INTERFERECOLOR\n62\n     1\n9\n$CSHADOW\n280\n     0\n9\n$SHADOWPLANELOCATION\n40\n0.0\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nAPPID\n330\n0\n5\n15C\n100\nAcDbSymbolTable\n70\n     0\n0\nAPPID\n330\n15C\n5\n100\n100\nAcDbSymbolTableRecord\n100\nAcDbRegAppTableRecord\n2\nVEDIKA_CAD\n70\n     0\n0\nENDTAB\n0\nTABLE\n2\nBLOCK_RECORD\n330\n0\n5\n15D\n100\nAcDbSymbolTable\n70\n     0\n0\nBLOCK_RECORD\n330\n15D\n5\n10A\n100\nAcDbSymbolTableRecord\n100\nAcDbBlockTableRecord\n2\n*Model_Space\n70\n     0\n340\n0\n70\n     0\n280\n     1\n281\n     1\n0\nBLOCK_RECORD\n330\n15D\n5\n10D\n100\nAcDbSymbolTableRecord\n100\nAcDbBlockTableRecord\n2\n*Model_Space\n70\n     0\n340\n0\n70\n     0\n280\n     1\n281\n     1\n0\nBLOCK_RECORD\n330\n15D\n5\n10E\n100\nAcDbSymbolTableRecord\n100\nAcDbBlockTableRecord\n2\n*Paper_Space\n70\n     0\n340\n0\n70\n     0\n280\n     1\n281\n     1\n0\nBLOCK_RECORD\n330\n15D\n5\n110\n100\nAcDbSymbolTableRecord\n100\nAcDbBlockTableRecord\n2\n*Paper_Space\n70\n     0\n340\n0\n70\n     0\n280\n     1\n281\n     1\n0\nBLOCK_RECORD\n330\n15D\n5\n116\n100\nAcDbSymbolTableRecord\n100\nAcDbBlockTableRecord\n2\n*D0\n70\n     0\n340\n0\n70\n     0\n280\n     1\n281\n     1\n0\nBLOCK_RECORD\n330\n15D\n5\n118\n100\nAcDbSymbolTableRecord\n100\nAcDbBlockTableRecord\n2\n*D0\n70\n     0\n340\n0\n70\n     0\n280\n     1\n281\n     1\n0\nBLOCK_RECORD\n330\n15D\n5\n11F\n100\nAcDbSymbolTableRecord\n100\nAcDbBlockTableRecord\n2\n*D1\n70\n     0\n340\n0\n70\n     0\n280\n     1\n281\n     1\n0\nBLOCK_RECORD\n330\n15D\n5\n121\n100\nAcDbSymbolTableRecord\n100\nAcDbBlockTableRecord\n2\n*D1\n70\n     0\n340\n0\n70\n     0\n280\n     1\n281\n     1\n0\nBLOCK_RECORD\n330\n15D\n5\n127\n100\nAcDbSymbolTableRecord\n100\nAcDbBlockTableRecord\n2\n*D2\n70\n     0\n340\n0\n70\n     0\n280\n     1\n281\n     1\n0\nBLOCK_RECORD\n330\n15D\n5\n129\n100\nAcDbSymbolTableRecord\n100\nAcDbBlockTableRecord\n2\n*D2\n70\n     0\n340\n0\n70\n     0\n280\n     1\n281\n     1\n0\nBLOCK_RECORD\n330\n15D\n5\n12F\n100\nAcDbSymbolTableRecord\n100\nAcDbBlockTableRecord\n2\n*D3\n70\n     0\n340\n0\n70\n     0\n280\n     1\n281\n     1\n0\nBLOCK_RECORD\n330\n15D\n5\n131\n100\nAcDbSymbolTableRecord\n100\nAcDbBlockTableRecord\n2\n*D3\n70\n     0\n340\n0\n70\n     0\n280\n     1\n281\n     1\n0\nBLOCK_RECORD\n330\n15D\n5\n157\n100\nAcDbSymbolTableRecord\n100\nAcDbBlockTableRecord\n2\nVEDIKA_DOOR\n70\n     0\n340\n0\n70\n     0\n280\n     1\n281\n     1\n0\nBLOCK_RECORD\n330\n15D\n5\n159\n100\nAcDbSymbolTableRecord\n100\nAcDbBlockTableRecord\n2\nVEDIKA_DOOR\n70\n     0\n340\n0\n70\n     0\n280\n     1\n281\n     1\n0\nENDTAB\n0\nTABLE\n2\nDIMSTYLE\n330\n0\n5\n15E\n100\nAcDbSymbolTable\n70\n     0\n0\nDIMSTYLE\n330\n15E\n5\n11E\n100\nAcDbSymbolTableRecord\n100\nAcDbDimStyleTableRecord\n2\nSTANDARD\n70\n     0\n3\n\n4\n\n40\n1.0\n41\n0.18\n42\n0.0625\n43\n0.38\n44\n0.18\n45\n0.0\n46\n0.0\n47\n0.0\n48\n0.0\n71\n     0\n72\n     0\n73\n     1\n74\n     1\n75\n     0\n76\n     0\n77\n     0\n78\n     0\n79\n     0\n140\n0.18\n141\n0.09\n142\n0.0\n143\n25.4\n144\n1.0\n145\n0.0\n146\n1.0\n147\n0.09\n148\n0.0\n170\n     0\n171\n     2\n172\n     0\n173\n     0\n174\n     0\n175\n     0\n176\n     0\n177\n     0\n178\n     0\n179\n    12\n270\n     1\n271\n     0\n272\n     0\n273\n     1\n274\n     0\n275\n     0\n276\n    12\n277\n     1\n278\n    46\n279\n     0\n280\n     0\n281\n     0\n282\n     0\n283\n     0\n284\n     0\n285\n     0\n286\n     0\n287\n     0\n288\n     1\n289\n     0\n340\n\n341\n\n342\n\n343\n\n344\n\n371\n     0\n372\n     0\n0\nENDTAB\n0\nTABLE\n2\nLTYPE\n330\n0\n5\n15F\n100\nAcDbSymbolTable\n70\n     0\n0\nLTYPE\n330\n15F\n5\n102\n100\nAcDbSymbolTableRecord\n100\nAcDbLinetypeTableRecord\n2\nCONTINUOUS\n70\n     0\n3\n\n72\n    65\n73\n     0\n40\n0.0\n0\nLTYPE\n330\n15F\n5\n112\n100\nAcDbSymbolTableRecord\n100\nAcDbLinetypeTableRecord\n2\nBYLAYER\n70\n     0\n3\n\n72\n    65\n73\n     0\n40\n0.0\n0\nENDTAB\n0\nTABLE\n2\nLAYER\n330\n0\n5\n160\n100\nAcDbSymbolTable\n70\n     0\n0\nLAYER\n330\n160\n5\n101\n100\nAcDbSymbolTableRecord\n100\nAcDbLayerTableRecord\n2\nVASTU-ROOMS\n70\n     0\n62\n     7\n6\nCONTINUOUS\n290\n1\n370\n     0\n390\n0\n347\n0\n0\nLAYER\n330\n160\n5\n103\n100\nAcDbSymbolTableRecord\n100\nAcDbLayerTableRecord\n2\nVASTU-ZONES\n70\n     0\n62\n     7\n6\nCONTINUOUS\n290\n1\n370\n     0\n390\n0\n347\n0\n0\nLAYER\n330\n160\n5\n104\n100\nAcDbSymbolTableRecord\n100\nAcDbLayerTableRecord\n2\nVASTU-DOORS\n70\n     0\n62\n     7\n6\nCONTINUOUS\n290\n1\n370\n     0\n390\n0\n347\n0\n0\nLAYER\n330\n160\n5\n105\n100\nAcDbSymbolTableRecord\n100\nAcDbLayerTableRecord\n2\nVASTU-FINDINGS\n70\n     0\n62\n     7\n6\nCONTINUOUS\n290\n1\n370\n     0\n390\n0\n347\n0\n0\nLAYER\n330\n160\n5\n106\n100\nAcDbSymbolTableRecord\n100\nAcDbLayerTableRecord\n2\nVASTU-DIMS\n70\n     0\n62\n     7\n6\nCONTINUOUS\n290\n1\n370\n     0\n390\n0\n347\n0\n0\nLAYER\n330\n160\n5\n107\n100\nAcDbSymbolTableRecord\n100\nAcDbLayerTableRecord\n2\nVASTU-PLOT\n70\n     0\n62\n     7\n6\nCONTINUOUS\n290\n1\n370\n     0\n390\n0\n347\n0\n0\nLAYER\n330\n160\n5\n108\n100\nAcDbSymbolTableRecord\n100\nAcDbLayerTableRecord\n2\nVASTU-LABELS\n70\n     0\n62\n     7\n6\nCONTINUOUS\n290\n1\n370\n     0\n390\n0\n347\n0\n0\nLAYER\n330\n160\n5\n109\n100\nAcDbSymbolTableRecord\n100\nAcDbLayerTableRecord\n2\nVASTU-HOLES\n70\n     0\n62\n     7\n6\nCONTINUOUS\n290\n1\n370\n     0\n390\n0\n347\n0\n0\nLAYER\n330\n160\n5\n10C\n100\nAcDbSymbolTableRecord\n100\nAcDbLayerTableRecord\n2\n0\n70\n     0\n62\n     7\n6\nCONTINUOUS\n290\n1\n370\n     0\n390\n0\n347\n0\n0\nENDTAB\n0\nTABLE\n2\nSTYLE\n330\n0\n5\n161\n100\nAcDbSymbolTable\n70\n     0\n0\nSTYLE\n330\n161\n5\n115\n100\nAcDbSymbolTableRecord\n100\nAcDbTextStyleTableRecord\n2\nSTANDARD\n70\n     0\n40\n0.0\n41\n1.0\n50\n0.0\n71\n     0\n42\n0.2\n3\ntxt\n4\n\n0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nBLOCKS\n0\nBLOCK\n330\n10D\n5\n10B\n100\nAcDbEntity\n8\n0\n100\nAcDbBlockBegin\n2\n*Model_Space\n70\n     0\n10\n0.0\n20\n0.0\n30\n0.0\n3\n*Model_Space\n1\n\n0\nENDBLK\n5\n162\n330\n10D\n100\nAcDbEntity\n8\n0\n100\nAcDbBlockEnd\n0\nBLOCK\n330\n110\n5\n10F\n100\nAcDbEntity\n8\n0\n100\nAcDbBlockBegin\n2\n*Paper_Space\n70\n     0\n10\n0.0\n20\n0.0\n30\n0.0\n3\n*Paper_Space\n1\n\n0\nENDBLK\n5\n163\n330\n110\n100\nAcDbEntity\n8\n0\n100\nAcDbBlockEnd\n0\nBLOCK\n330\n118\n5\n117\n100\nAcDbEntity\n8\n0\n100\nAcDbBlockBegin\n2\n*D0\n70\n     0\n10\n0.0\n20\n0.0\n30\n0.0\n3\n*D0\n1\n\n0\nLINE\n330\n118\n5\n119\n100\nAcDbEntity\n8\nVASTU-DIMS\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbLine\n10\n0.0\n20\n0.0\n30\n0.0\n11\n0.0\n21\n0.25\n31\n0.0\n1001\nVEDIKA_CAD\n0\nLINE\n330\n118\n5\n11A\n100\nAcDbEntity\n8\nVASTU-DIMS\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbLine\n10\n4.0\n20\n0.0\n30\n0.0\n11\n4.0\n21\n0.25\n31\n0.0\n1001\nVEDIKA_CAD\n0\nLINE\n330\n118\n5\n11B\n100\nAcDbEntity\n8\nVASTU-DIMS\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbLine\n10\n0.0\n20\n0.25\n30\n0.0\n11\n4.0\n21\n0.25\n31\n0.0\n1001\nVEDIKA_CAD\n0\nTEXT\n330\n118\n5\n11C\n100\nAcDbEntity\n8\nVASTU-DIMS\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbText\n10\n2.0\n20\n0.25\n30\n0.0\n40\n0.15\n1\n4.000000\n100\nAcDbText\n1001\nVEDIKA_CAD\n0\nENDBLK\n5\n164\n330\n118\n100\nAcDbEntity\n8\n0\n100\nAcDbBlockEnd\n0\nBLOCK\n330\n121\n5\n120\n100\nAcDbEntity\n8\n0\n100\nAcDbBlockBegin\n2\n*D1\n70\n     0\n10\n0.0\n20\n0.0\n30\n0.0\n3\n*D1\n1\n\n0\nLINE\n330\n121\n5\n122\n100\nAcDbEntity\n8\nVASTU-DIMS\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbLine\n10\n4.0\n20\n0.0\n30\n0.0\n11\n3.75\n21\n0.0\n31\n0.0\n1001\nVEDIKA_CAD\n0\nLINE\n330\n121\n5\n123\n100\nAcDbEntity\n8\nVASTU-DIMS\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbLine\n10\n4.0\n20\n3.0\n30\n0.0\n11\n3.75\n21\n3.0\n31\n0.0\n1001\nVEDIKA_CAD\n0\nLINE\n330\n121\n5\n124\n100\nAcDbEntity\n8\nVASTU-DIMS\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbLine\n10\n3.75\n20\n0.0\n30\n0.0\n11\n3.75\n21\n3.0\n31\n0.0\n1001\nVEDIKA_CAD\n0\nTEXT\n330\n121\n5\n125\n100\nAcDbEntity\n8\nVASTU-DIMS\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbText\n10\n3.75\n20\n1.5\n30\n0.0\n40\n0.15\n1\n3.000000\n100\nAcDbText\n1001\nVEDIKA_CAD\n0\nENDBLK\n5\n165\n330\n121\n100\nAcDbEntity\n8\n0\n100\nAcDbBlockEnd\n0\nBLOCK\n330\n129\n5\n128\n100\nAcDbEntity\n8\n0\n100\nAcDbBlockBegin\n2\n*D2\n70\n     0\n10\n0.0\n20\n0.0\n30\n0.0\n3\n*D2\n1\n\n0\nLINE\n330\n129\n5\n12A\n100\nAcDbEntity\n8\nVASTU-DIMS\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbLine\n10\n4.0\n20\n3.0\n30\n0.0\n11\n4.0\n21\n2.75\n31\n0.0\n1001\nVEDIKA_CAD\n0\nLINE\n330\n129\n5\n12B\n100\nAcDbEntity\n8\nVASTU-DIMS\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbLine\n10\n0.0\n20\n3.0\n30\n0.0\n11\n0.0\n21\n2.75\n31\n0.0\n1001\nVEDIKA_CAD\n0\nLINE\n330\n129\n5\n12C\n100\nAcDbEntity\n8\nVASTU-DIMS\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbLine\n10\n4.0\n20\n2.75\n30\n0.0\n11\n0.0\n21\n2.75\n31\n0.0\n1001\nVEDIKA_CAD\n0\nTEXT\n330\n129\n5\n12D\n100\nAcDbEntity\n8\nVASTU-DIMS\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbText\n10\n2.0\n20\n2.75\n30\n0.0\n40\n0.15\n1\n4.000000\n100\nAcDbText\n1001\nVEDIKA_CAD\n0\nENDBLK\n5\n166\n330\n129\n100\nAcDbEntity\n8\n0\n100\nAcDbBlockEnd\n0\nBLOCK\n330\n131\n5\n130\n100\nAcDbEntity\n8\n0\n100\nAcDbBlockBegin\n2\n*D3\n70\n     0\n10\n0.0\n20\n0.0\n30\n0.0\n3\n*D3\n1\n\n0\nLINE\n330\n131\n5\n132\n100\nAcDbEntity\n8\nVASTU-DIMS\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbLine\n10\n0.0\n20\n3.0\n30\n0.0\n11\n0.25\n21\n3.0\n31\n0.0\n1001\nVEDIKA_CAD\n0\nLINE\n330\n131\n5\n133\n100\nAcDbEntity\n8\nVASTU-DIMS\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbLine\n10\n0.0\n20\n0.0\n30\n0.0\n11\n0.25\n21\n0.0\n31\n0.0\n1001\nVEDIKA_CAD\n0\nLINE\n330\n131\n5\n134\n100\nAcDbEntity\n8\nVASTU-DIMS\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbLine\n10\n0.25\n20\n3.0\n30\n0.0\n11\n0.25\n21\n0.0\n31\n0.0\n1001\nVEDIKA_CAD\n0\nTEXT\n330\n131\n5\n135\n100\nAcDbEntity\n8\nVASTU-DIMS\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbText\n10\n0.25\n20\n1.5\n30\n0.0\n40\n0.15\n1\n3.000000\n100\nAcDbText\n1001\nVEDIKA_CAD\n0\nENDBLK\n5\n167\n330\n131\n100\nAcDbEntity\n8\n0\n100\nAcDbBlockEnd\n0\nBLOCK\n330\n159\n5\n158\n100\nAcDbEntity\n8\n0\n100\nAcDbBlockBegin\n2\nVEDIKA_DOOR\n70\n     0\n10\n0.0\n20\n0.0\n30\n0.0\n3\nVEDIKA_DOOR\n1\n\n0\nLINE\n330\n159\n5\n15A\n100\nAcDbEntity\n8\nVASTU-DOORS\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbLine\n10\n0.0\n20\n0.0\n30\n0.0\n11\n1.0\n21\n0.0\n31\n0.0\n1001\nVEDIKA_CAD\n0\nENDBLK\n5\n168\n330\n159\n100\nAcDbEntity\n8\n0\n100\nAcDbBlockEnd\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n330\n10D\n5\n111\n100\nAcDbEntity\n8\nVASTU-PLOT\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbPolyline\n90\n        5\n70\n     1\n10\n0.0\n20\n0.0\n91\n        0\n10\n10.0\n20\n0.0\n91\n        0\n10\n10.0\n20\n8.0\n91\n        0\n10\n0.0\n20\n8.0\n91\n        0\n10\n0.0\n20\n0.0\n91\n        0\n1001\nVEDIKA_CAD\n1000\nrole=plot\n1000\ntrueNorthDeg=0\n1000\ntrueNorthKnown=true\n1000\nunitsCode=6\n0\nLWPOLYLINE\n330\n10D\n5\n113\n100\nAcDbEntity\n8\nVASTU-ROOMS\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbPolyline\n90\n        4\n70\n     1\n10\n0.0\n20\n0.0\n91\n        0\n10\n4.0\n20\n0.0\n91\n        0\n10\n4.0\n20\n3.0\n91\n        0\n10\n0.0\n20\n3.0\n91\n        0\n1001\nVEDIKA_CAD\n1000\nid=room-1\n1000\nname=Study\n1000\nrole=room\n1000\nparentRegion=\n1000\nsourceHandle=\n0\nTEXT\n330\n10D\n5\n114\n100\nAcDbEntity\n8\nVASTU-LABELS\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbText\n10\n2.0\n20\n1.5\n30\n0.0\n40\n0.15\n1\nStudy\n100\nAcDbText\n1001\nVEDIKA_CAD\n1000\nrole=label\n0\nDIMENSION\n330\n10D\n5\n11D\n100\nAcDbEntity\n8\nVASTU-DIMS\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbDimension\n280\n     0\n2\n*D0\n10\n0.0\n20\n0.25\n30\n0.0\n11\n2.0\n21\n0.25\n31\n0.0\n70\n    33\n71\n     1\n1\n4.000000\n3\nSTANDARD\n100\nAcDbAlignedDimension\n12\n0.0\n22\n0.0\n32\n0.0\n13\n0.0\n23\n0.0\n33\n0.0\n14\n4.0\n24\n0.0\n34\n0.0\n50\n0.0\n52\n0.0\n100\nAcDbRotatedDimension\n1001\nVEDIKA_CAD\n0\nDIMENSION\n330\n10D\n5\n126\n100\nAcDbEntity\n8\nVASTU-DIMS\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbDimension\n280\n     0\n2\n*D1\n10\n3.75\n20\n0.0\n30\n0.0\n11\n3.75\n21\n1.5\n31\n0.0\n70\n    33\n71\n     1\n1\n3.000000\n3\nSTANDARD\n100\nAcDbAlignedDimension\n12\n0.0\n22\n0.0\n32\n0.0\n13\n4.0\n23\n0.0\n33\n0.0\n14\n4.0\n24\n3.0\n34\n0.0\n50\n90.0\n52\n0.0\n100\nAcDbRotatedDimension\n1001\nVEDIKA_CAD\n0\nDIMENSION\n330\n10D\n5\n12E\n100\nAcDbEntity\n8\nVASTU-DIMS\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbDimension\n280\n     0\n2\n*D2\n10\n4.0\n20\n2.75\n30\n0.0\n11\n2.0\n21\n2.75\n31\n0.0\n70\n    33\n71\n     1\n1\n4.000000\n3\nSTANDARD\n100\nAcDbAlignedDimension\n12\n0.0\n22\n0.0\n32\n0.0\n13\n4.0\n23\n3.0\n33\n0.0\n14\n0.0\n24\n3.0\n34\n0.0\n50\n180.0\n52\n0.0\n100\nAcDbRotatedDimension\n1001\nVEDIKA_CAD\n0\nDIMENSION\n330\n10D\n5\n136\n100\nAcDbEntity\n8\nVASTU-DIMS\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbDimension\n280\n     0\n2\n*D3\n10\n0.25\n20\n3.0\n30\n0.0\n11\n0.25\n21\n1.5\n31\n0.0\n70\n    33\n71\n     1\n1\n3.000000\n3\nSTANDARD\n100\nAcDbAlignedDimension\n12\n0.0\n22\n0.0\n32\n0.0\n13\n0.0\n23\n3.0\n33\n0.0\n14\n0.0\n24\n0.0\n34\n0.0\n50\n-90.0\n52\n0.0\n100\nAcDbRotatedDimension\n1001\nVEDIKA_CAD\n0\nLINE\n330\n10D\n5\n137\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbLine\n10\n5.0\n20\n4.0\n30\n0.0\n11\n6.521804642574\n21\n11.650628578915\n31\n0.0\n1001\nVEDIKA_CAD\n1000\nbearingDeg=11.25\n0\nTEXT\n330\n10D\n5\n138\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbText\n10\n5.0\n20\n8.680307952279\n30\n0.0\n40\n0.15\n1\n1 / 16\n100\nAcDbText\n1001\nVEDIKA_CAD\n0\nLINE\n330\n10D\n5\n139\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbLine\n10\n5.0\n20\n4.0\n30\n0.0\n11\n9.333732966085\n21\n10.485889730896\n31\n0.0\n1001\nVEDIKA_CAD\n1000\nbearingDeg=33.75\n0\nTEXT\n330\n10D\n5\n13A\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbText\n10\n6.791076311704\n20\n8.32404072296\n30\n0.0\n40\n0.15\n1\n2 / 16\n100\nAcDbText\n1001\nVEDIKA_CAD\n0\nLINE\n330\n10D\n5\n13B\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbLine\n10\n5.0\n20\n4.0\n30\n0.0\n11\n11.485889730896\n21\n8.333732966085\n31\n0.0\n1001\nVEDIKA_CAD\n1000\nbearingDeg=56.25\n0\nTEXT\n330\n10D\n5\n13C\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbText\n10\n8.309477491097\n20\n7.309477491097\n30\n0.0\n40\n0.15\n1\n3 / 16\n100\nAcDbText\n1001\nVEDIKA_CAD\n0\nLINE\n330\n10D\n5\n13D\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbLine\n10\n5.0\n20\n4.0\n30\n0.0\n11\n12.650628578915\n21\n5.521804642574\n31\n0.0\n1001\nVEDIKA_CAD\n1000\nbearingDeg=78.75\n0\nTEXT\n330\n10D\n5\n13E\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbText\n10\n9.32404072296\n20\n5.791076311704\n30\n0.0\n40\n0.15\n1\n4 / 16\n100\nAcDbText\n1001\nVEDIKA_CAD\n0\nLINE\n330\n10D\n5\n13F\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbLine\n10\n5.0\n20\n4.0\n30\n0.0\n11\n12.650628578915\n21\n2.478195357426\n31\n0.0\n1001\nVEDIKA_CAD\n1000\nbearingDeg=101.25\n0\nTEXT\n330\n10D\n5\n140\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbText\n10\n9.680307952279\n20\n4.0\n30\n0.0\n40\n0.15\n1\n5 / 16\n100\nAcDbText\n1001\nVEDIKA_CAD\n0\nLINE\n330\n10D\n5\n141\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbLine\n10\n5.0\n20\n4.0\n30\n0.0\n11\n11.485889730896\n21\n-0.333732966085\n31\n0.0\n1001\nVEDIKA_CAD\n1000\nbearingDeg=123.75\n0\nTEXT\n330\n10D\n5\n142\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbText\n10\n9.32404072296\n20\n2.208923688296\n30\n0.0\n40\n0.15\n1\n6 / 16\n100\nAcDbText\n1001\nVEDIKA_CAD\n0\nLINE\n330\n10D\n5\n143\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbLine\n10\n5.0\n20\n4.0\n30\n0.0\n11\n9.333732966085\n21\n-2.485889730896\n31\n0.0\n1001\nVEDIKA_CAD\n1000\nbearingDeg=146.25\n0\nTEXT\n330\n10D\n5\n144\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbText\n10\n8.309477491097\n20\n0.690522508903\n30\n0.0\n40\n0.15\n1\n7 / 16\n100\nAcDbText\n1001\nVEDIKA_CAD\n0\nLINE\n330\n10D\n5\n145\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbLine\n10\n5.0\n20\n4.0\n30\n0.0\n11\n6.521804642574\n21\n-3.650628578915\n31\n0.0\n1001\nVEDIKA_CAD\n1000\nbearingDeg=168.75\n0\nTEXT\n330\n10D\n5\n146\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbText\n10\n6.791076311704\n20\n-0.32404072296\n30\n0.0\n40\n0.15\n1\n8 / 16\n100\nAcDbText\n1001\nVEDIKA_CAD\n0\nLINE\n330\n10D\n5\n147\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbLine\n10\n5.0\n20\n4.0\n30\n0.0\n11\n3.478195357426\n21\n-3.650628578915\n31\n0.0\n1001\nVEDIKA_CAD\n1000\nbearingDeg=191.25\n0\nTEXT\n330\n10D\n5\n148\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbText\n10\n5.0\n20\n-0.680307952279\n30\n0.0\n40\n0.15\n1\n9 / 16\n100\nAcDbText\n1001\nVEDIKA_CAD\n0\nLINE\n330\n10D\n5\n149\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbLine\n10\n5.0\n20\n4.0\n30\n0.0\n11\n0.666267033915\n21\n-2.485889730896\n31\n0.0\n1001\nVEDIKA_CAD\n1000\nbearingDeg=213.75\n0\nTEXT\n330\n10D\n5\n14A\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbText\n10\n3.208923688296\n20\n-0.32404072296\n30\n0.0\n40\n0.15\n1\n10 / 16\n100\nAcDbText\n1001\nVEDIKA_CAD\n0\nLINE\n330\n10D\n5\n14B\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbLine\n10\n5.0\n20\n4.0\n30\n0.0\n11\n-1.485889730896\n21\n-0.333732966085\n31\n0.0\n1001\nVEDIKA_CAD\n1000\nbearingDeg=236.25\n0\nTEXT\n330\n10D\n5\n14C\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbText\n10\n1.690522508903\n20\n0.690522508903\n30\n0.0\n40\n0.15\n1\n11 / 16\n100\nAcDbText\n1001\nVEDIKA_CAD\n0\nLINE\n330\n10D\n5\n14D\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbLine\n10\n5.0\n20\n4.0\n30\n0.0\n11\n-2.650628578915\n21\n2.478195357426\n31\n0.0\n1001\nVEDIKA_CAD\n1000\nbearingDeg=258.75\n0\nTEXT\n330\n10D\n5\n14E\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbText\n10\n0.67595927704\n20\n2.208923688296\n30\n0.0\n40\n0.15\n1\n12 / 16\n100\nAcDbText\n1001\nVEDIKA_CAD\n0\nLINE\n330\n10D\n5\n14F\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbLine\n10\n5.0\n20\n4.0\n30\n0.0\n11\n-2.650628578915\n21\n5.521804642574\n31\n0.0\n1001\nVEDIKA_CAD\n1000\nbearingDeg=281.25\n0\nTEXT\n330\n10D\n5\n150\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbText\n10\n0.319692047721\n20\n4.0\n30\n0.0\n40\n0.15\n1\n13 / 16\n100\nAcDbText\n1001\nVEDIKA_CAD\n0\nLINE\n330\n10D\n5\n151\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbLine\n10\n5.0\n20\n4.0\n30\n0.0\n11\n-1.485889730896\n21\n8.333732966085\n31\n0.0\n1001\nVEDIKA_CAD\n1000\nbearingDeg=303.75\n0\nTEXT\n330\n10D\n5\n152\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbText\n10\n0.67595927704\n20\n5.791076311704\n30\n0.0\n40\n0.15\n1\n14 / 16\n100\nAcDbText\n1001\nVEDIKA_CAD\n0\nLINE\n330\n10D\n5\n153\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbLine\n10\n5.0\n20\n4.0\n30\n0.0\n11\n0.666267033915\n21\n10.485889730896\n31\n0.0\n1001\nVEDIKA_CAD\n1000\nbearingDeg=326.25\n0\nTEXT\n330\n10D\n5\n154\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbText\n10\n1.690522508903\n20\n7.309477491097\n30\n0.0\n40\n0.15\n1\n15 / 16\n100\nAcDbText\n1001\nVEDIKA_CAD\n0\nLINE\n330\n10D\n5\n155\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbLine\n10\n5.0\n20\n4.0\n30\n0.0\n11\n3.478195357426\n21\n11.650628578915\n31\n0.0\n1001\nVEDIKA_CAD\n1000\nbearingDeg=348.75\n0\nTEXT\n330\n10D\n5\n156\n100\nAcDbEntity\n8\nVASTU-ZONES\n347\n0\n370\n     0\n430\n\n390\n0\n284\n     0\n100\nAcDbText\n10\n3.208923688296\n20\n8.32404072296\n30\n0.0\n40\n0.15\n1\n16 / 16\n100\nAcDbText\n1001\nVEDIKA_CAD\n0\nENDSEC\n0\nSECTION\n2\nOBJECTS\n0\nENDSEC\n0\nEOF\n",
+        "fileName": "vastu-plan.dxf",
+        "findingCount": 0,
+        "inputUnits": "m",
+        "metresPerInputUnit": 1,
+        "needsReview": false,
+        "openingCount": 0,
+        "roomCount": 1,
+        "trueNorthDeg": 0,
+        "unitsCode": 6,
+        "version": "R2013",
+        "zones": 16
+      },
+      "meta": {
+        "contentMode": "computed_from_request",
+        "emptyFieldsDiscarded": [],
+        "engine": "vedika-intelligence",
+        "inputUsage": "accepted_within_sandbox_limits",
+        "limitsApplied": [],
+        "mode": "sandbox",
+        "note": "This answer was computed from your supplied input within the stated sandbox limits. Missing fields are not filled from the demo, and explicit empty values reach the endpoint validator. No account storage or billing occurs.",
+        "receivedFields": [
+          "plan",
+          "zones"
+        ],
+        "sandboxLimits": {
+          "maxDimension": 500,
+          "maxPolygonVertices": 16,
+          "maxRooms": 8
+        },
+        "version": "2.1.0"
+      },
+      "success": true
+    },
+    "vastu__plan_import_ifc": {
+      "billing": {
+        "balanceAfter": 100,
+        "balanceBefore": 100,
+        "category": "astrology",
+        "charged": 0,
+        "currency": "USD",
+        "endpoint": "/sandbox/vastu/plan/import-ifc"
+      },
+      "data": {
+        "buildings": [
+          {
+            "id": "0zzCnj091OxeRykeq9epQV",
+            "name": "Building A"
+          }
+        ],
+        "canonicalUnits": "m",
+        "inputUnits": "mm",
+        "mappingReport": [
+          {
+            "entityId": "3JPSwLngDQVOsEMPdN4lPn",
+            "entityType": "IFCSPACE",
+            "planIds": [
+              "3JPSwLngDQVOsEMPdN4lPn"
+            ],
+            "status": "mapped",
+            "stepId": 62,
+            "storeyId": "1p$CTDhB9UXfwDeNU7yv_V"
+          },
+          {
+            "entityId": "3lQrZroabVtxFHH$J4FBiO",
+            "entityType": "IFCSPACE",
+            "planIds": [
+              "3lQrZroabVtxFHH$J4FBiO"
+            ],
+            "status": "mapped",
+            "stepId": 69,
+            "storeyId": "1p$CTDhB9UXfwDeNU7yv_V"
+          },
+          {
+            "entityId": "07hjwdQIHGyxcHnBbkIb6j",
+            "entityType": "IFCSPACE",
+            "planIds": [
+              "07hjwdQIHGyxcHnBbkIb6j"
+            ],
+            "status": "mapped",
+            "stepId": 95,
+            "storeyId": "0yZ2EoBzrQIuYp6dCq$ObS"
+          },
+          {
+            "entityId": "2y7rxYC01LMg_Ugfcog_Tr",
+            "entityType": "IFCDOOR",
+            "planIds": [
+              "2y7rxYC01LMg_Ugfcog_Tr"
+            ],
+            "status": "mapped",
+            "stepId": 102,
+            "storeyId": "1p$CTDhB9UXfwDeNU7yv_V"
+          },
+          {
+            "entityId": "3OwCeSUdXINgnzMRYoqM8n",
+            "entityType": "IFCWINDOW",
+            "planIds": [
+              "3OwCeSUdXINgnzMRYoqM8n"
+            ],
+            "status": "mapped",
+            "stepId": 108,
+            "storeyId": "0yZ2EoBzrQIuYp6dCq$ObS"
+          },
+          {
+            "entityId": "1p$CTDhB9UXfwDeNU7yv_V",
+            "entityType": "IFCBUILDINGSTOREY",
+            "planIds": [
+              "1p$CTDhB9UXfwDeNU7yv_V"
+            ],
+            "status": "mapped",
+            "stepId": 34
+          },
+          {
+            "entityId": "0yZ2EoBzrQIuYp6dCq$ObS",
+            "entityType": "IFCBUILDINGSTOREY",
+            "planIds": [
+              "0yZ2EoBzrQIuYp6dCq$ObS"
+            ],
+            "status": "mapped",
+            "stepId": 40
+          },
+          {
+            "entityId": "0zzCnj091OxeRykeq9epQV",
+            "entityType": "IFCBUILDING",
+            "planIds": [
+              "0zzCnj091OxeRykeq9epQV"
+            ],
+            "status": "mapped",
+            "stepId": 26
+          }
+        ],
+        "metresPerInputUnit": 0.001,
+        "needsReview": false,
+        "reviewReasons": [],
+        "schema": "IFC4",
+        "storeys": [
+          {
+            "buildingId": "0zzCnj091OxeRykeq9epQV",
+            "elevationMetres": 0,
+            "id": "1p$CTDhB9UXfwDeNU7yv_V",
+            "name": "Ground",
+            "plan": {
+              "cadMetadata": {
+                "buildingId": "0zzCnj091OxeRykeq9epQV",
+                "format": "ifc",
+                "metresPerUnit": 0.001,
+                "originMetres": [
+                  99.22354286469245,
+                  200
+                ],
+                "rotationToTrueNorthDeg": 30.000000000000004,
+                "schema": "IFC4",
+                "storeyId": "1p$CTDhB9UXfwDeNU7yv_V",
+                "trueNorthFrameOffsetMetres": [
+                  -1.4488887394336132,
+                  0.3882285676537762
+                ],
+                "trueNorthKnown": true
+              },
+              "canonicalUnits": "m",
+              "openings": {
+                "doors": [
+                  {
+                    "centre": [
+                      3.146625176280142,
+                      1.0253048327204872
+                    ],
+                    "id": "2y7rxYC01LMg_Ugfcog_Tr",
+                    "line": [
+                      [
+                        2.8284271247461943,
+                        0.7071067811865395
+                      ],
+                      [
+                        3.4648232278140894,
+                        1.343502884254435
+                      ]
+                    ],
+                    "name": "Door D1",
+                    "openingHeight": 2.1,
+                    "source": {
+                      "globalId": "2y7rxYC01LMg_Ugfcog_Tr",
+                      "openingGlobalId": null,
+                      "stepId": 102
+                    },
+                    "type": "door",
+                    "width": 0.9
+                  }
+                ],
+                "units": "metres",
+                "windows": []
+              },
+              "orientationDeg": 0,
+              "plot": {
+                "length": 7.778174593052006,
+                "polygon": [
+                  [
+                    0,
+                    2.121320343559666
+                  ],
+                  [
+                    2.1213203435596446,
+                    0
+                  ],
+                  [
+                    7.7781745930520225,
+                    5.656854249492404
+                  ],
+                  [
+                    5.6568542494923815,
+                    7.778174593052006
+                  ]
+                ],
+                "units": "metres",
+                "width": 7.7781745930520225
+              },
+              "rooms": [
+                {
+                  "area": 12.000000000000082,
+                  "centre": [
+                    2.4748737341529203,
+                    2.4748737341529274
+                  ],
+                  "h": 4.949747468305855,
+                  "id": "3JPSwLngDQVOsEMPdN4lPn",
+                  "name": "Kitchen",
+                  "polygon": [
+                    [
+                      2.1213203435596446,
+                      0
+                    ],
+                    [
+                      4.949747468305841,
+                      2.8284271247461894
+                    ],
+                    [
+                      2.828427124746196,
+                      4.949747468305855
+                    ],
+                    [
+                      0,
+                      2.121320343559666
+                    ]
+                  ],
+                  "source": {
+                    "entityType": "IFCSPACE",
+                    "globalId": "3JPSwLngDQVOsEMPdN4lPn",
+                    "longName": "Kitchen",
+                    "method": "representation",
+                    "name": "101",
+                    "stepId": 62
+                  },
+                  "w": 4.949747468305841,
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "area": 8.999999999999938,
+                  "centre": [
+                    5.656854249492378,
+                    5.656854249492385
+                  ],
+                  "h": 4.242640687119252,
+                  "id": "3lQrZroabVtxFHH$J4FBiO",
+                  "name": "Study",
+                  "polygon": [
+                    [
+                      5.656854249492376,
+                      3.5355339059327537
+                    ],
+                    [
+                      7.7781745930520225,
+                      5.656854249492404
+                    ],
+                    [
+                      5.6568542494923815,
+                      7.778174593052006
+                    ],
+                    [
+                      3.5355339059327333,
+                      5.656854249492388
+                    ]
+                  ],
+                  "source": {
+                    "entityType": "IFCSPACE",
+                    "globalId": "3lQrZroabVtxFHH$J4FBiO",
+                    "longName": "Study",
+                    "method": "IfcRelSpaceBoundary",
+                    "name": "102",
+                    "stepId": 69
+                  },
+                  "w": 4.242640687119289,
+                  "x": 3.5355339059327333,
+                  "y": 3.5355339059327537
+                }
+              ],
+              "sourceInputUnits": "mm",
+              "trueNorthDeg": 30.000000000000004,
+              "units": "metres"
+            }
+          },
+          {
+            "buildingId": "0zzCnj091OxeRykeq9epQV",
+            "elevationMetres": 3.5,
+            "id": "0yZ2EoBzrQIuYp6dCq$ObS",
+            "name": "First",
+            "plan": {
+              "cadMetadata": {
+                "buildingId": "0zzCnj091OxeRykeq9epQV",
+                "format": "ifc",
+                "metresPerUnit": 0.001,
+                "originMetres": [
+                  98.96472381958992,
+                  200
+                ],
+                "rotationToTrueNorthDeg": 30.000000000000004,
+                "schema": "IFC4",
+                "storeyId": "0yZ2EoBzrQIuYp6dCq$ObS",
+                "trueNorthFrameOffsetMetres": [
+                  -1.931851652578132,
+                  0.5176380902050397
+                ],
+                "trueNorthKnown": true
+              },
+              "canonicalUnits": "m",
+              "openings": {
+                "doors": [],
+                "units": "metres",
+                "windows": [
+                  {
+                    "centre": [
+                      1.7677669529663589,
+                      1.060660171779849
+                    ],
+                    "id": "3OwCeSUdXINgnzMRYoqM8n",
+                    "line": [
+                      [
+                        2.1213203435596286,
+                        0.7071067811865741
+                      ],
+                      [
+                        1.4142135623730892,
+                        1.4142135623731236
+                      ]
+                    ],
+                    "name": "Window W1",
+                    "openingHeight": 1.2,
+                    "source": {
+                      "globalId": "3OwCeSUdXINgnzMRYoqM8n",
+                      "openingGlobalId": null,
+                      "stepId": 108
+                    },
+                    "type": "window",
+                    "width": 1
+                  }
+                ]
+              },
+              "orientationDeg": 0,
+              "plot": {
+                "length": 6.363961030678905,
+                "polygon": [
+                  [
+                    0,
+                    2.8284271247461836
+                  ],
+                  [
+                    2.8284271247461823,
+                    0
+                  ],
+                  [
+                    6.363961030678913,
+                    3.5355339059327537
+                  ],
+                  [
+                    3.5355339059327333,
+                    6.363961030678905
+                  ]
+                ],
+                "units": "metres",
+                "width": 6.363961030678913
+              },
+              "rooms": [
+                {
+                  "area": 19.999999999999872,
+                  "centre": [
+                    3.1819805153394563,
+                    3.1819805153394585
+                  ],
+                  "h": 6.363961030678905,
+                  "id": "07hjwdQIHGyxcHnBbkIb6j",
+                  "name": "Bedroom",
+                  "polygon": [
+                    [
+                      2.8284271247461823,
+                      0
+                    ],
+                    [
+                      6.363961030678913,
+                      3.5355339059327537
+                    ],
+                    [
+                      3.5355339059327333,
+                      6.363961030678905
+                    ],
+                    [
+                      0,
+                      2.8284271247461836
+                    ]
+                  ],
+                  "source": {
+                    "entityType": "IFCSPACE",
+                    "globalId": "07hjwdQIHGyxcHnBbkIb6j",
+                    "longName": "Bedroom",
+                    "method": "representation",
+                    "name": "203",
+                    "stepId": 95
+                  },
+                  "w": 6.363961030678913,
+                  "x": 0,
+                  "y": 0
+                }
+              ],
+              "sourceInputUnits": "mm",
+              "trueNorthDeg": 30.000000000000004,
+              "units": "metres"
+            }
+          }
+        ],
+        "trueNorthDeg": 30.000000000000004
+      },
+      "meta": {
+        "contentMode": "computed_from_request",
+        "emptyFieldsDiscarded": [],
+        "engine": "vedika-intelligence",
+        "inputUsage": "accepted_within_sandbox_limits",
+        "limitsApplied": [],
+        "mode": "sandbox",
+        "note": "This answer was computed from your supplied input within the stated sandbox limits. Missing fields are not filled from the demo, and explicit empty values reach the endpoint validator. No account storage or billing occurs.",
+        "receivedFields": [
+          "ifc"
+        ],
+        "sandboxLimits": {
+          "maxDimension": 500,
+          "maxPolygonVertices": 16,
+          "maxRooms": 8
+        },
+        "version": "2.1.0"
+      },
+      "success": true
+    }
+  }
+}

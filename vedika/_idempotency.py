@@ -13,7 +13,7 @@ path segment.
 """
 
 import re
-from typing import Optional
+from typing import Optional, Tuple
 
 _CERTIFIED = (
     ("POST", "/api/v1/astrology/query", "X-Idempotency-Key"),
@@ -98,6 +98,25 @@ def _compile(template: str) -> "re.Pattern[str]":
 
 
 _PATTERNS = tuple((method, _compile(path), header) for method, path, header in _CERTIFIED)
+
+
+# The question route is documented with ``X-Idempotency-Key``, but its handler names
+# the charge from ``Idempotency-Key`` (then ``X-Request-Id``). A resend that carried
+# only ``X-Idempotency-Key`` would be billed as a new request, so both are sent.
+_QUESTION_PATH = "/api/v1/astrology/query"
+
+
+def certified_headers(method: str, path: str) -> Tuple[str, ...]:
+    """Every header name that must carry the key for a certified operation.
+
+    Empty when the operation is not certified. The question route needs two.
+    """
+    header = certified_header(method, path)
+    if header is None:
+        return ()
+    if method.upper() == "POST" and path.split("?", 1)[0] == _QUESTION_PATH:
+        return (header, "Idempotency-Key")
+    return (header,)
 
 
 def certified_header(method: str, path: str) -> Optional[str]:

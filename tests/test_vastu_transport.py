@@ -17,8 +17,8 @@ import pytest
 from vedika.client import VedikaClient
 from vedika.exceptions import VedikaAPIError
 
-# The 11 GET-only reference tables + the GET+POST dual, from the Rust router
-# (VASTU_GET_REFERENCE_ROUTES + VASTU_DUAL_ROUTE in vedika-v2/src/vastu.rs).
+# The 11 GET-only reference tables + the GET+POST dual, from the server's
+# Vastu router.
 GET_OPS = [
     "reference/directions/8",
     "reference/directions/16",
@@ -331,7 +331,7 @@ def test_embedded_credentials_cannot_smuggle_an_off_domain_host():
 # ---------------------------------------------------------------------------
 # AR operations
 #
-# Both server prefixes are aliases of the same Rust operation inventory. The
+# Both server prefixes are aliases of the same operation inventory. The
 # named helpers use the SDK's established /v2/astrology/vastu/ prefix.
 # ---------------------------------------------------------------------------
 

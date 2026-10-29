@@ -2,23 +2,23 @@
 
 Requires Python 3.10 or later, Requests 2.33.0 or later within 2.x, and urllib3 2.7.0 or later within 2.x. Upgrade Python 3.8 and 3.9 before installing this release. These dependency floors include the current credential, redirect, and decompression security fixes.
 
-Official Python SDK for the Vedika Astrology API - The **only B2B astrology API with AI-powered chatbot queries**.
+Official Python SDK for the Vedika Astrology API - structured calculations and conversational readings for application developers.
 
 [![PyPI version](https://badge.fury.io/py/vedika-sdk.svg)](https://badge.fury.io/py/vedika-sdk)
 [![Python Versions](https://img.shields.io/pypi/pyversions/vedika-sdk.svg)](https://pypi.org/project/vedika-sdk/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 🌟 What Makes Vedika Unique?
+## Capabilities
 
-Vedika is the **ONLY B2B astrology API** that offers:
+The SDK provides access to these Vedika capabilities:
 - ✅ **AI-Powered Chatbot Queries** (conversational astrology questions)
 - ✅ **Voice AI** (spoken answers in Indian languages and English; see `/api/v1/voice/pricing` for the current tiers and their languages)
-- ✅ **Fast, Standard & Eco Delivery Tiers** (1.5-3s fast vs 12-18s comprehensive; eco is the lower-cost engine)
+- ✅ **Fast, Standard, Eco & Pro Ultra Delivery Tiers** (availability varies by route and plan; response time depends on the request and selected tier)
 - ✅ **Multi-Turn Conversations** (maintain context via conversationId)
 - ✅ **Traditional Vedic Coverage** (birth charts, dashas, yogas, doshas, compatibility)
-- ✅ **Multi-Language Answers** (14 Indian languages plus English, and major world languages)
+- ✅ **Multi-Language Answers** (availability varies by operation and plan; see the current API reference)
 
-**In summary:** All the features of traditional astrology APIs, **PLUS** conversational AI capabilities no other provider has.
+Use structured calculations and conversational readings through the same authenticated API.
 
 ## 🚀 Quick Start
 
@@ -36,7 +36,7 @@ from vedika import VedikaClient
 # Initialize client
 client = VedikaClient(api_key="vk_live_...")
 
-# Ask a conversational astrology question (UNIQUE to Vedika!)
+# Ask a conversational astrology question
 response = client.ask_question(
     question="What are my career prospects for this year?",
     birth_details={
@@ -45,8 +45,8 @@ response = client.ask_question(
         "longitude": 77.2090,
         "timezone": "+05:30"
     },
-    language="en",  # 29 languages; see the language list below
-    speed="standard"  # 'fast' (1.5-3s), 'standard' (12-18s, default), or 'eco' (lower cost)
+    language="en",  # See the language codes and route-specific coverage below
+    speed="standard"  # 'fast', 'standard' (default), 'eco' or 'pro-ultra'; availability varies by route and plan
 )
 
 print(response.answer)
@@ -76,10 +76,10 @@ Full metadata: {'model': 'Vedika AI', 'processing_time_ms': 18420, 'cost': {'cos
 
 ## 📚 Features
 
-### 🤖 AI Chatbot Queries (Unique Feature!)
+### 🤖 AI Chatbot Queries
 
 ```python
-# Conversational astrology - No other API has this!
+# Conversational astrology with documented request fields
 response = client.ask_question(
     question="When should I start my new business?",
     birth_details=birth_info,
@@ -390,7 +390,7 @@ A batch contains 1–20 properties. Missing or blank caller keys fail before net
 
 ## 🌍 Multi-Language Support
 
-Vedika answers in 29 languages:
+Set the response language using the codes below. Availability varies by operation, delivery tier and plan; confirm your route in the [API reference](https://vedika.io/api-reference).
 
 ```python
 # Ask in Hindi
@@ -408,7 +408,7 @@ response = client.ask_question(
 )
 ```
 
-**Supported languages:**
+**Language codes:**
 - 🇮🇳 South Asian: Hindi (`hi`), Bengali (`bn`), Tamil (`ta`), Telugu (`te`), Marathi (`mr`),
   Gujarati (`gu`), Kannada (`kn`), Malayalam (`ml`), Punjabi (`pa`), Odia (`od`), Assamese (`as`),
   Urdu (`ur`), Nepali (`ne`), Sinhala (`si`)
@@ -441,7 +441,8 @@ with open("question.wav", "rb") as audio:
     )
 
 if voice.audio is not None:
-    with open("answer.mp3", "wb") as output:
+    # The reply is WAV audio normally; the response Content-Type names the format.
+    with open("answer.wav", "wb") as output:
         output.write(voice.audio)
 else:
     print(voice.response_text)
@@ -449,21 +450,148 @@ else:
 
 ### Speed Modes
 
+Choose a supported tier for your operation and plan. Response time depends on the route, request complexity, answer length and selected tier; tier names do not guarantee a fixed duration.
+
 ```python
-# Fast mode: 1.5-3 seconds, English only, ~700 word cap
+# Select the fast tier when supported by your route and plan
 fast_resp = client.ask_question(
     question="Quick career check?",
     birth_details=birth_info,
     speed="fast"  # Optimized for latency
 )
 
-# Standard mode: 12-18 seconds, all languages, full depth (default)
+# Standard is the default tier; language and answer controls depend on the route
 full_resp = client.ask_question(
     question="Full career analysis?",
     birth_details=birth_info,
     speed="standard"  # Comprehensive response
 )
 ```
+
+### Pro Ultra and answer-length controls
+
+`speed` also accepts `"pro-ultra"`. Beside it, `ask_question`, `ask_vastu_report`
+and `ask_question_stream` take these optional keyword-only arguments, each sent
+only when you set it:
+
+| Argument | Value |
+| --- | --- |
+| `speed` | `"standard"` (default), `"fast"`, `"eco"` or `"pro-ultra"` |
+| `version` | `"2.5"` (default) or `"2"` (retiring). Standard speed only: with any other speed it is a 400 `VALIDATION_ERROR`. |
+| `detail` | `"brief"`, `"standard"` or `"detailed"`. `"standard"` is the same as leaving it out. On Pro Ultra it also sets how much reasoning the model applies before it writes: `"brief"` the least, `"standard"` or omitted a balanced amount, `"detailed"` the most. |
+| `max_tokens` | Integer output-token limit, 1 to 4000 (1 to 8192 on `"eco"`), sent as `maxTokens`. Default 2500 (2000 on `"fast"`, 8192 on `"eco"`) when you set neither `max_tokens` nor `detail`. A whole number outside the range is clamped to it. |
+| `stop` | One string, or a list of 1 to 4 strings of 1 to 64 characters. Refused with an explicit `version="2.5"`. |
+| `seed` | Integer sampling hint. Best effort; not a guarantee of identical output. Refused on `"pro-ultra"` and with an explicit `version="2.5"`. |
+
+```python
+brief = client.ask_question(
+    question="What are my career prospects this year?",
+    birth_details=birth_info,
+    speed="pro-ultra",
+    detail="brief",     # a complete, shorter answer
+    max_tokens=600,     # output-token limit for this answer
+    stop=["END"],       # one string, or up to 4
+)
+
+# Standard speed pinned to the retiring engine version
+legacy = client.ask_question(
+    question="Full career analysis?",
+    birth_details=birth_info,
+    speed="standard",
+    version="2",
+    seed=42,
+)
+```
+
+The API checks each control against the tier before anything is billed. A
+control the tier does not support (for example `seed` on Pro Ultra) is refused
+with a 400 and the code `CONTROL_UNSUPPORTED_FOR_TIER`, so you are never charged
+for it. On standard speed with no `version`, a request that carries `stop` or
+`seed` is served on version `"2"` instead of being refused. The SDK passes your
+values through and leaves those rules to the API.
+
+| Refusal | Code | Charged |
+| --- | --- | --- |
+| A control the tier does not support (`seed` on Pro Ultra, `stop` or `seed` with an explicit `version="2.5"`) | 400 `CONTROL_UNSUPPORTED_FOR_TIER` | No |
+| `detail` is not `brief`, `standard` or `detailed` | 400 `INVALID_DETAIL` | No |
+| `stop` is not 1 to 4 strings of 1 to 64 characters | 400 `INVALID_STOP` | No |
+| A `stop` sequence matched before any answer text was written | 400 `STOP_MATCHED_BEFORE_ANSWER` (on a stream, an `error` event). Change or remove `stop`. | No |
+| `detail="detailed"` with a `max_tokens` below 384 (not on `"eco"`) | 400 `DETAIL_BUDGET_CONFLICT` | No |
+| `version` with a speed other than standard, or a value other than `"2"` or `"2.5"` | 400 `VALIDATION_ERROR` | No |
+| Pro Ultra cannot serve right now | 503 `PRO_ULTRA_UNAVAILABLE`, raised as `ProUltraUnavailableError` | No |
+| Pro Ultra used its whole output budget before writing any text, and the request had no birth chart | 400 `OUTPUT_BUDGET_EXHAUSTED`, raised as `OutputBudgetExhaustedError` | No |
+
+`QuestionErrorCode` holds the control and tier code strings above (and
+`ECO_UNAVAILABLE` and `VERSION_UNAVAILABLE`), so you can compare `e.code`
+without typing them out. `VALIDATION_ERROR` is a general code and is not in it.
+
+```python
+from vedika import (
+    OutputBudgetExhaustedError,
+    ProUltraUnavailableError,
+    QuestionErrorCode,
+    VedikaAPIError,
+)
+
+try:
+    answer = client.ask_question(
+        question="What are my career prospects this year?",
+        birth_details=birth_info,
+        speed="pro-ultra",
+        max_tokens=600,
+    )
+    print(answer.answer)
+except ProUltraUnavailableError as e:
+    # 503, not charged, and no other tier answered in its place.
+    print(f"Pro Ultra is unavailable; try again in {e.retry_after or 5}s")
+except OutputBudgetExhaustedError as e:
+    # 400, not charged. Retry with a higher max_tokens, or detail="brief".
+    print(e.message)
+except VedikaAPIError as e:
+    if e.code == QuestionErrorCode.CONTROL_UNSUPPORTED_FOR_TIER:
+        print("Drop the control the tier does not support:", e.message)
+    else:
+        raise
+```
+
+Both are `VedikaAPIError`s, so `except VedikaAPIError` still catches them, with
+`status_code` and `code` set. `ProUltraUnavailableError` is also a `ServerError`.
+Other 5xx responses still raise `VedikaAPIError` with `status_code`.
+
+**A cut-off answer is a normal response.** When an answer reaches its output
+limit, the call returns normally with `response.finish_reason` set to `"length"`
+(or `"budgetExceeded"` when it was found to end mid-sentence),
+`response.truncated` and `response.degraded` both `True`, and
+`response.degraded_reason` set to `"budget_truncated"`. It is not charged. The
+text may stop mid-sentence, so check `truncated` before showing it as final,
+then ask again with a higher `max_tokens` or `detail="brief"`. Every answer, cut off
+or not, carries `finish_reason` and `truncated`, whatever you sent: a finished
+answer reads `"complete"` and `False`. On Vedika Pro Ultra a `stop` match reads
+`"stopSequence"`; on the other speeds it reads `"complete"`.
+
+A stream reports a cut-off the same way, in the `metadata` of its `completed`
+event: `finishReason`, `truncated`, `degraded: true` and
+`degradedReason: "budget_truncated"`. A cut-off stream is not charged either; the
+text it already delivered stays with you.
+
+```python
+answer = client.ask_question(
+    question="What are my career prospects this year?",
+    birth_details=birth_info,
+    speed="pro-ultra",
+    max_tokens=300,
+)
+if answer.truncated:
+    print(f"Cut off ({answer.finish_reason}); not charged. Retry with a higher max_tokens.")
+```
+
+On Pro Ultra, `max_tokens` is the answer budget and the service adds room for
+reasoning on top of it. Reasoning is billed as output only when it is used, so
+one request can bill up to `max_tokens` plus 8,192 output tokens;
+`answer.raw["metadata"]` has the `usage` and `cost` that were actually used. A
+question that uses even that room before any text is written is never charged:
+with a birth chart you get the response above (`budget_truncated`, with a
+chart-only answer), without one the 400 `OUTPUT_BUDGET_EXHAUSTED`.
 
 ### Streaming Responses (Real-Time)
 
@@ -472,9 +600,9 @@ full_resp = client.ask_question(
 for chunk in client.ask_question_stream(
     question="What are my career prospects?",
     birth_details=birth_info,
-    speed="standard"  # Fast mode not available on streaming
+    speed="standard"  # "fast", "eco" and "pro-ultra" work on streaming too
 ):
-    print(chunk.text, end="", flush=True)
+    print(chunk, end="", flush=True)
 
 # Events: 'started', 'progress', 'stage_completed', 'data_sources', 'billing_completed', 'billing_error', 'completed', 'error'
 ```
@@ -607,6 +735,7 @@ https://github.com/vedika-io/vedika-sdk-python/tree/main/examples
 - `dosha_detector.py` - Comprehensive dosha analysis
 - `streaming_example.py` - Real-time streaming responses
 - `vastu_audit.py` - Vastu mandala projection, room placement, audit and scoring
+- `room_scan.py` - Upload a finished room scan and show the floor merge rule (a dry run unless you pass `--live`)
 
 ## 🤝 Contributing
 
@@ -667,22 +796,22 @@ client = VedikaClient(api_key="...", timeout=120)  # 2 minutes
 
 ### "Rate Limit Exceeded"
 
-The client reads the response `code`, not the `x-ratelimit-*` headers. A per-minute limit (`RATE_LIMIT_EXCEEDED`) is retried after the `retryAfter` the API gives, up to `max_retries`; a wait longer than `max_retry_wait` is raised instead of slept on. A daily allowance that is used up (`DAILY_LIMIT_EXCEEDED`) is never retried and raises `DailyLimitError`, a subclass of `RateLimitError`:
+The client reads the response `code`, not the `x-ratelimit-*` headers. A per-minute limit (`RATE_LIMIT_EXCEEDED`) is retried after the `retryAfter` the API gives, up to `max_retries`; a wait longer than `max_retry_wait` is raised instead of slept on. A daily allowance that is used up (`DAILY_LIMIT_EXCEEDED`) is never retried and raises `DailyLimitError`, a subclass of `RateLimitError`. So is the account's monthly spend limit (`MONTHLY_SPEND_LIMIT_REACHED`): it clears only in the new month, or when the owner raises or removes the limit under Billing, so read `e.code` to tell the two apart:
 
 ```python
 from vedika import DailyLimitError, RateLimitError
 
 try:
     client.get_usage()
-except DailyLimitError:
-    ...  # allowance used up: upgrade your plan or wait for the reset
+except DailyLimitError as e:
+    ...  # allowance used up (see e.code): upgrade your plan, raise the spend limit, or wait for the reset
 except RateLimitError as e:
     print(e.code, e.retry_after)
 ```
 
 ### Retries and idempotency
 
-A call is resent after a 5xx or a timeout only when that cannot charge you twice: GET and DELETE calls, and calls that carry an idempotency key. The client generates a key by itself only for the operations the API documents as accepting one (for example `ask_question` and the property, archive, quote and job Vastu operations); it never sends one elsewhere, because the API refuses a key on the other billed routes. To make any other call safe to repeat yourself, pass `idempotency_key=` where a method offers it. For an operation without a named method, use the generic call:
+A call is resent after a 5xx or a timeout only when that cannot charge you twice: GET and DELETE calls, and calls that carry an idempotency key. A 400 is never retried, whatever its code (`CONTROL_UNSUPPORTED_FOR_TIER`, `DETAIL_BUDGET_CONFLICT`, `OUTPUT_BUDGET_EXHAUSTED` and the rest), and the client never changes your settings to make a retry fit: the request was refused before billing, so change it and send it again. A 503 `PRO_ULTRA_UNAVAILABLE` is retried like any other 503: `ask_question` and `ask_vastu_report` carry a key, so they are sent again, always on Pro Ultra, waiting the API's `Retry-After`; after the last retry it is raised as `ProUltraUnavailableError`. `ask_question_stream` is never retried. The client generates a key by itself only for the operations the API documents as accepting one (for example `ask_question` and the property, archive, quote and job Vastu operations); it never sends one elsewhere, because the API refuses a key on the other billed routes. To make any other call safe to repeat yourself, pass `idempotency_key=` where a method offers it. For an operation without a named method, use the generic call:
 
 ```python
 data = client.request("POST", "/v2/astrology/kundli", json={"datetime": "1990-06-15T14:30:00", "latitude": 28.6139, "longitude": 77.209, "timezone": "+05:30"})
@@ -690,8 +819,7 @@ data = client.request("POST", "/v2/astrology/kundli", json={"datetime": "1990-06
 
 ## 📊 Performance
 
-- **Average response time:** 2.14 seconds (simple queries)
-- **Complex queries:** 28-36 seconds (advanced AI processing)
+Response time depends on the operation, request complexity, answer length and selected tier. Measure representative requests for your application and configure an appropriate timeout.
 
 ## 🔒 Security
 
@@ -721,29 +849,18 @@ If you find this SDK helpful, please:
 
 ---
 
-## 🎯 Why Choose Vedika?
+## Choosing an integration
 
-### Vedika vs Traditional Astrology APIs
+Use the SDK when your application needs structured chart data, conversational readings, or both. Available operations, response languages and usage limits depend on your plan and the selected route.
 
-| Feature | Vedika | Others |
-|---------|--------|--------|
-| **AI Chatbot Queries** | ✅ YES (UNIQUE!) | ❌ No |
-| Birth Charts | ✅ Yes | ✅ Yes |
-| Dashas | ✅ Yes | ✅ Yes |
-| Compatibility | ✅ Yes | ✅ Yes |
-| 300+ Yogas | ✅ Yes | ⚠️ Limited |
-| Dosha Analysis | ✅ Complete | ⚠️ Basic |
-| Advanced AI Engine | ✅ Yes | ❌ No |
-| 22 Languages | ✅ Yes | ❌ English only |
-| Streaming | ✅ Yes | ❌ No |
-| **Unique Value** | **Traditional + AI** | Traditional only |
-
-**Bottom line:** Vedika provides everything other astrology APIs offer, **PLUS** the only conversational AI chatbot capability in the market.
+- Start with the [API reference](https://vedika.io/api-reference) for request and response contracts.
+- Use the [keyless sandbox](https://vedika.io/sandbox) for fixed mock examples.
+- Review [pricing](https://vedika.io/pricing) before sending authenticated production requests.
 
 ---
 
 **Built with ❤️ by Vedika Intelligence**
 
-**The only B2B astrology API with AI-powered chatbot queries.**
+**Astrology APIs with structured calculations and conversational readings.**
 
 Get started: https://vedika.io

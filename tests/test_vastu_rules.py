@@ -6,7 +6,7 @@ class VastuRulesTransport(unittest.TestCase):
     def test_version_and_receipt_transport(self):
         client = VedikaClient(api_key="vk_test")
         client._request = MagicMock(return_value={"success": True})
-        body = {"fromVersion": "vastu-rules-2026-09-23", "toVersion": "vastu-rules-2026-10-04", "input": {"rooms": [{"name": "bedroom", "zone": "SW"}]}}
+        body = {"fromVersion": "vastu-rules-2026-10-04", "toVersion": "vastu-rules-2026-10-18", "input": {"rooms": [{"name": "living", "zone": "CENTER"}]}}
         client.vastu_compare_versions(body, idempotency_key="comparison-retry")
         client._request.assert_called_with("POST", "/v2/astrology/vastu/plan/compare-versions", data=body, idempotency_key="comparison-retry")
         client.vastu_rule_versions()

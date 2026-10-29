@@ -57,6 +57,9 @@ VEDIKA_API_KEY=vk_live_...
   - Mandala projection, entrance classification, room placement, scoring
   - Vastu takes a BUILDING (plot polygon, rooms, compass zone), never a birth chart
   - Best for: Architectural / construction Vastu review
+- **`room_scan.py`** - Upload a finished room scan and show the floor merge rule (a dry run unless you pass `--live`)
+  - Room-capture upload and two-floor merge; the dry run sends nothing
+  - Best for: Mobile and AR scan integrations
 
 ## Running Examples
 

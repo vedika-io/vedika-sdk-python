@@ -1,0 +1,43 @@
+{
+  "success": true,
+  "response": "Your 10th house of career is governed by Saturn, which sits strong in its own sign here, indicating steady professional growth built on discipline rather than sudden leaps. The current Jupiter period favours expansion through skill-building and mentorship.",
+  "metadata": {
+    "model": "Vedika AI",
+    "engine": "vedika-intelligence",
+    "processing_time_ms": 18420,
+    "usage": {
+      "input_tokens": 5120,
+      "output_tokens": 640,
+      "cached_tokens": 0,
+      "total_tokens": 5760
+    },
+    "cost": {
+      "costUsd": 0.01,
+      "currency": "USD"
+    },
+    "wallet": {
+      "balance_before": 12.5,
+      "deducted": 0.01,
+      "balance_after": 12.49,
+      "currency": "USD"
+    },
+    "language": "en",
+    "speed": "standard",
+    "served": "live"
+  },
+  "birthChart": {
+    "ascendant": "Leo",
+    "moonSign": "Taurus",
+    "sunSign": "Taurus"
+  },
+  "followUps": [
+    "Which months this year are most favourable for a job change?",
+    "How does my dasha affect my finances?"
+  ],
+  "followUpSuggestions": [
+    "Which months this year are most favourable for a job change?",
+    "How does my dasha affect my finances?"
+  ],
+  "conversationId": "conv_8f3a21",
+  "conversationContext": null
+}
