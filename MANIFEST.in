@@ -18,6 +18,7 @@ recursive-include examples *.md
 
 # Include tests (for source distributions)
 recursive-include tests *.py
+include tests/fixtures/sse-events.json
 recursive-include tests/fixtures/reference *.json
 
 # Exclude build artifacts

@@ -2,6 +2,7 @@
 
 https://html.spec.whatwg.org/multipage/server-sent-events.html#event-stream-interpretation
 """
+
 from __future__ import annotations
 
 import codecs
@@ -40,6 +41,7 @@ def _event_lines(chunks: Iterable[bytes]) -> Iterator[str]:
 
 
 def iter_sse_data(chunks: Iterable[bytes]) -> Iterator[str]:
+    """Yield complete event data, discarding incomplete events at EOF."""
     data: list[str] = []
     for line in _event_lines(chunks):
         if line == "":
