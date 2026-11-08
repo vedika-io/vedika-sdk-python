@@ -8,6 +8,8 @@ import ast
 import re
 from pathlib import Path
 
+from pytest import MonkeyPatch
+
 PACKAGE_ROOT = Path(__file__).resolve().parent.parent
 EXAMPLES = PACKAGE_ROOT / "examples"
 
@@ -22,10 +24,32 @@ INTERNAL_REFERENCE = re.compile(
 
 def shipped_text_files():
     files = [PACKAGE_ROOT / name for name in ("README.md", "CHANGELOG.md", "SECURITY.md", "CONTRIBUTING.md", "setup.py")]
-    for folder, pattern in (("vedika", "*.py"), ("examples", "*"), ("tests", "*.py")):
+    for folder, pattern in (
+        ("vedika", "*.py"),
+        ("examples", "*.py"),
+        ("examples", "*.md"),
+        ("tests", "*.py"),
+    ):
         files.extend(path for path in sorted((PACKAGE_ROOT / folder).rglob(pattern)) if path.is_file())
     files.extend(sorted((PACKAGE_ROOT / "tests" / "fixtures" / "reference").rglob("*.json")))
     return files
+
+
+def test_shipped_text_scan_excludes_generated_example_bytecode(
+    tmp_path: Path, monkeypatch: MonkeyPatch
+) -> None:
+    monkeypatch.setitem(globals(), "PACKAGE_ROOT", tmp_path)
+    sources = [tmp_path / "examples" / "nested" / name for name in ("demo.py", "README.md")]
+    for path in sources:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("# Example\n", encoding="utf-8")
+    bytecode = tmp_path / "examples" / "nested" / "__pycache__" / "demo.cpython-312.pyc"
+    bytecode.parent.mkdir()
+    bytecode.write_bytes(b"\xff\x00\x80")
+
+    selected = [path for path in shipped_text_files() if path.is_file()]
+    assert set(selected) == set(sources)
+    assert all(path.read_text(encoding="utf-8") == "# Example\n" for path in selected)
 
 
 def listed_examples(markdown):
