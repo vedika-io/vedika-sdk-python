@@ -384,6 +384,8 @@ answer = client.ask_vastu_report(
 )
 ```
 
+`vastu_job_result_items` follows `nextCursor` even when a page has no results. If the server returns a cursor already seen during that iteration (including a cycle such as `a → b → a`), it raises `ValueError` before requesting that cursor again. Results already yielded remain available to the caller.
+
 The named helpers (`vastu_listing_assessment`, `vastu_score`, `vastu_audit`, `vastu_room`, `vastu_placement` and the rest) take `idempotency_key=`. Pass a key you saved when a retry may come from a new call.
 
 A batch contains 1–20 properties. Missing or blank caller keys fail before network. Each item uses the existing assessment price; there is no batch fee. Inspect every item status even when the batch succeeds. The HTML artifact opens offline and can be printed to PDF. Scores are versioned conventions; compare the same version and equivalent room coverage. Detailed audits report missing input and do not certify physical survey completeness.

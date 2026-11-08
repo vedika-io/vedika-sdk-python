@@ -8709,8 +8709,13 @@ class VedikaClient:
         ))
 
     def vastu_job_result_items(self, job_id: str) -> Iterator[VastuJobResultItem]:
-        """Every finished item of a job, following ``nextCursor`` until it is None."""
+        """Every finished item of a job, following ``nextCursor`` until it is None.
+
+        Raises:
+            ValueError: If the server reuses a cursor, including in a longer cycle.
+        """
         cursor: Optional[str] = None
+        seen_cursors: set[str] = set()
         while True:
             page = self.vastu_job_results(job_id, cursor=cursor)
             for item in page["data"]["results"]:
@@ -8718,8 +8723,9 @@ class VedikaClient:
             following = page["data"]["nextCursor"]
             if not following:
                 return
-            if following == cursor:
+            if following in seen_cursors:
                 raise ValueError("The server returned the same results cursor twice")
+            seen_cursors.add(following)
             cursor = following
 
     def vastu_job_cancel(self, job_id: str) -> VastuJobsIdCancelResponse:

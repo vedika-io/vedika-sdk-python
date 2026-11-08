@@ -1,5 +1,10 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+- `vastu_job_result_items` detects non-consecutive cursor cycles and raises `ValueError` before requesting a previously visited cursor again. Empty pages with a fresh `nextCursor` continue normally.
+
 ## [3.2.2] - 2026-10-29
 
 ### Changed
