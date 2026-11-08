@@ -1,0 +1,110 @@
+[
+  {
+    "name": "JSON events",
+    "wire": "event: token\ndata: {\"text\":\"hello\"}\n\nevent: completed\ndata: {\"metadata\":{\"truncated\":false}}\n\n",
+    "expected": [
+      "{\"text\":\"hello\"}",
+      "{\"metadata\":{\"truncated\":false}}"
+    ]
+  },
+  {
+    "name": "optional space",
+    "wire": "data:hello\n\n",
+    "expected": [
+      "hello"
+    ]
+  },
+  {
+    "name": "multiline data",
+    "wire": "data: hello\ndata:world\ndata:\n\n",
+    "expected": [
+      "hello\nworld\n"
+    ]
+  },
+  {
+    "name": "empty data",
+    "wire": "data:\n\ndata\n\n",
+    "expected": [
+      "",
+      ""
+    ]
+  },
+  {
+    "name": "CRLF",
+    "wire": "data: first\r\n\r\ndata: second\r\n\r\n",
+    "expected": [
+      "first",
+      "second"
+    ]
+  },
+  {
+    "name": "CR only",
+    "wire": "data: first\r\rdata: second\r\r",
+    "expected": [
+      "first",
+      "second"
+    ]
+  },
+  {
+    "name": "mixed line endings",
+    "wire": "data: first\rdata: second\n\r\n",
+    "expected": [
+      "first\nsecond"
+    ]
+  },
+  {
+    "name": "comments and unknown fields",
+    "wire": ": heartbeat\nevent: token\nid: 7\nretry: 3000\nunknown: ignore\nData: ignore\ndata: kept\n\n",
+    "expected": [
+      "kept"
+    ]
+  },
+  {
+    "name": "ignored event",
+    "wire": "event: ping\n\n\n: heartbeat\n\n",
+    "expected": []
+  },
+  {
+    "name": "leading BOM",
+    "wire": "﻿data: नमस्ते తెలుగు 🌙\n\n",
+    "expected": [
+      "नमस्ते తెలుగు 🌙"
+    ]
+  },
+  {
+    "name": "embedded BOM and unicode separators",
+    "wire": "data: a﻿bc d e\n\n",
+    "expected": [
+      "a﻿bc d e"
+    ]
+  },
+  {
+    "name": "strip one space only",
+    "wire": "data:  leading: value\n\n",
+    "expected": [
+      " leading: value"
+    ]
+  },
+  {
+    "name": "incomplete line",
+    "wire": "data: partial",
+    "expected": []
+  },
+  {
+    "name": "incomplete event",
+    "wire": "data: partial\n",
+    "expected": []
+  },
+  {
+    "name": "complete then incomplete",
+    "wire": "data: complete\n\ndata: partial\n",
+    "expected": [
+      "complete"
+    ]
+  },
+  {
+    "name": "empty stream",
+    "wire": "",
+    "expected": []
+  }
+]

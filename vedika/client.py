@@ -58,6 +58,7 @@ from .exceptions import (
     QuestionErrorCode,
 )
 from ._idempotency import certified_headers
+from ._sse import iter_sse_data
 from ._version import __version__
 
 
@@ -7851,7 +7852,8 @@ class VedikaClient:
         either; the text it already delivered stays with you.
 
         Yields:
-            Response chunks as they're generated
+            Complete SSE event data strings. Multiline data is joined with
+            newlines; incomplete events at EOF are discarded.
 
         Example:
             >>> for chunk in client.ask_question_stream(
@@ -7878,11 +7880,7 @@ class VedikaClient:
             if response.status_code != 200:
                 raise VedikaAPIError(f"Stream request failed: HTTP {response.status_code}", status_code=response.status_code)
 
-            for line in response.iter_lines():
-                if line:
-                    decoded = line.decode('utf-8')
-                    if decoded.startswith('data: '):
-                        yield decoded[6:]  # Remove 'data: ' prefix
+            yield from iter_sse_data(response.iter_content(chunk_size=512))
 
     def get_birth_chart(
         self,

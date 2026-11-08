@@ -1,5 +1,10 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+- Streamed answers now yield complete SSE event data across arbitrary network chunks. Preserve UTF-8 text, handle LF/CRLF/CR, optional spaces, multiline and empty data, and discard incomplete events at EOF. Streaming requests remain non-retrying.
+
 ## [3.2.2] - 2026-10-29
 
 ### Changed
